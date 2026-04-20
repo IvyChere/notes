@@ -1,0 +1,68 @@
+# 你的网站根域名
+baseURL = "https://blogs.starspress.org/"
+# 网站语言
+languageCode = "zh-cn"
+# 网站标题
+title = "Ivy_C's Notes"
+# 使用的主题
+theme = "PaperMod"
+
+# 分页设置：每页显示多少篇文章
+paginate = 5
+
+# 启用 robots.txt
+enableRobotsTXT = true
+
+[params]
+  # 网站描述，会显示在 HTML meta 标签中
+  description = "Ivy_C 的笔记"
+  # 网站作者
+  author = "Ivy_C"
+  # 网站关键词，用于 SEO
+  keywords = ["博客", "物理", "笔记"]
+  # 主题颜色模式 (auto: 跟随系统, light: 亮色, dark: 暗色)
+  defaultTheme = "auto"
+  # 是否显示阅读时间
+  ShowReadingTime = true
+  # 是否显示分享按钮
+  ShowShareButtons = true
+  # 是否显示文章上下篇导航
+  ShowPostNavLinks = true
+  # 是否显示面包屑导航
+  ShowBreadCrumbs = true
+  # 是否显示代码复制按钮
+  ShowCodeCopyButtons = true
+  # 是否显示字数统计
+  ShowWordCount = true
+  # 是否使用 Hugo 内置的目录功能
+  UseHugoToc = true
+  # 是否禁用页面滚动到顶部的按钮
+  disableScrollToTop = false
+
+# 导航栏菜单配置
+[[menu.main]]
+  identifier = "archives"
+  name = "归档"
+  url = "/archives/"
+  weight = 10
+
+[[menu.main]]
+  identifier = "tags"
+  name = "标签"
+  url = "/tags/"
+  weight = 20
+
+[[menu.main]]
+  identifier = "search"
+  name = "搜索"
+  url = "/search/"
+  weight = 30
+
+# 社交链接配置
+[[params.socialIcons]]
+  name = "github"
+  url = "https://github.com/IvyChere"
+
+[[params.socialIcons]]
+  name = "twitter"
+  url = "https://twitter.com/你的用户名"
