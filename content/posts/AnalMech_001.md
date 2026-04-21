@@ -2,12 +2,13 @@
 date = '2026-04-20T23:51:43+08:00'
 draft = false
 math = true
-title = '分析力学 001 - 从牛顿力学出发'
+title = '分析力学 001'
 tags = ['物理', '分析力学']
 categories = ['物理']
+description = "从牛顿到拉格朗日"
 +++
 
-## 一、 牛顿第二定律
+### 1. 牛顿第二定律
 
 在牛顿力学的视角下，质点的运动规律都服从一个二阶微分方程
 
@@ -19,7 +20,7 @@ $$
 
 看起来，牛顿第二定律似乎足够我们解决大多数的动力学问题了. 但是对于具体的物理情景而言，情况似乎要复杂得多.
 
-
+#### 1.1 物理坐标$(x, y)$下的单摆运动
 
 例如，我们考虑匀重力场$\mathbf{g}$下一个摆长为$l$单摆的运动：
 
@@ -29,27 +30,35 @@ $$
 
 $$
 \mathrm{T} \sin \theta = - \mathrm{m} \mathrm{\ddot{x}} \\
-\mathrm{T} \cos \theta - \mathrm{mg}=\mathrm{m} \mathrm{\ddot{y}} 
+\mathrm{mg} - \mathrm{T} \cos \theta =\mathrm{m} \mathrm{\ddot{y}} 
 $$
 
 消去$\mathrm{T}$得到：
 
 $$
-\mathrm{\ddot{x}} + (\mathrm{\ddot{y}+g})\tan \theta = 0
+\mathrm{\ddot{x}} + (\mathrm{\ddot{y}-g}) \frac{x} {y}= 0 \Rightarrow \mathrm{ \ddot{x} y + x(\ddot{y} - g) = 0}
 $$
 
-不幸的是，在这样的情形下，仅凭借牛顿第二定律无法帮助我们得到单摆的运动方程. 原因是显而易见的：在这个情景下，质点不是在整个空间内不受束缚地自由运动. 它的运动受到了几何上的**约束**，即摆绳不可自由伸长。
+不幸的是，在这样的情形下，仅凭借牛顿第二定律无法帮助我们得到单摆的运动方程. 原因是显而易见的：在这个情景下，质点不是在整个空间内不受束缚地自由运动. 它的运动受到了几何上的**约束**$\mathrm{x^2+y^2} = l^2$，即摆绳不可自由伸长. 只有联立这两个方程，才能最终解出单摆的运动方程. 
+
+对约束方程求二次导数：
 
 $$
-\mathrm{x^2+y^2} = l^2
+\mathrm{ x\dot{x} + y\dot{y} = 0} \Rightarrow \mathrm{\dot{y} = -\frac{x}{y} \dot{x}}\\
+\mathrm{ \dot{x}^2 + x \ddot{x} + \dot{y}^2 + y \ddot{y} = 0 }
 $$
 
-对其求二阶导数得：
+消去$\mathrm{y, \dot{y}, \ddot{y}}$得到：
 
 $$
-\mathrm{x \ddot{x} +(\dot{x})^2}+\mathrm{y \ddot{y} +(\dot{y})^2} = 0
+\mathrm{\ddot{x} + \frac{x}{L^2 - x^2} \dot{x}^2 + \frac{g}{L^2} x \sqrt{L^2 - x^2} = 0}
 $$
 
+同理可得到$\mathrm{y}$分量的运动方程. 
 
+#### 1.2 传统方法的不足
 
+到这里，我们可以发现传统的牛顿第二定律在描述质点运动时的不足：
 
+- 牛顿第二定律是矢量定律，必须要考虑各个分量上的运动。而由于约束的存在，某些分量上的运动又不是互相独立的
+- 在物理坐标$(x, y)$下，哪怕对于某些简单的运动，其运动方程也极其复杂
