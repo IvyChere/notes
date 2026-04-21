@@ -8,7 +8,7 @@ title = "Ivy_C's Notes"
 theme = "PaperMod"
 
 # 分页设置：每页显示多少篇文章
-paginate = 5
+paginate = 8
 
 # 启用 robots.txt
 enableRobotsTXT = true
@@ -38,6 +38,8 @@ enableRobotsTXT = true
   UseHugoToc = true
   # 是否禁用页面滚动到顶部的按钮
   disableScrollToTop = false
+  
+  search = true
 
 [markup.goldmark.extensions.passthrough]
  enable = true
@@ -46,11 +48,6 @@ enableRobotsTXT = true
   inline = [["\\(", "\\)"]]
 
 # 导航栏菜单配置
-[[menu.main]]
-  identifier = "archives"
-  name = "归档"
-  url = "/archives/"
-  weight = 10
 
 [[menu.main]]
   identifier = "tags"
@@ -64,12 +61,21 @@ enableRobotsTXT = true
   url = "/search/"
   weight = 30
 
+  [[menu.main]]
+    name = "分类"
+    url = "/categories/"
+    weight = 20
+
 # 社交链接配置
 [[params.socialIcons]]
   name = "github"
   url = "https://github.com/IvyChere"
+  
+[params.fuseOpts]
+  isCaseSensitive = false  # 是否区分大小写
+  ignoreLocation = true    # 是否忽略匹配位置
+  threshold = 0.4          # 搜索阈值，0.0为完全匹配，1.0为匹配所有
+  keys = ["title", "summary", "content", "categories", "tags"] # 自定义搜索范围
 
-[[params.socialIcons]]
-  name = "twitter"
-  url = "https://twitter.com/你的用户名"
-
+[outputs]
+  home = ["HTML", "RSS", "JSON"]

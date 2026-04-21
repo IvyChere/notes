@@ -95,11 +95,11 @@ $$
 为了书写方便，我们将引入$Einstein$求和约定：**当一个表达式中出现了重复的指标（包括上标、下标）时，将这个重复指标视为求和索引，对表达式进行遍历求和**：
 
 $$
-\sum_{i=1}^{n} p_i q_i := p_i q_i \\
+p_i q_i :=\sum_{i=1}^{n} p_i q_i
 $$
 
 $$
-\sum_{\mu=1}^{n} \sum_{\nu=1}^{n} r_{\mu\nu} s_\mu t_\nu := r_{\mu\nu} s_\mu t_\nu
+r_{\mu\nu} s_\mu t_\nu:= \sum_{\mu=1}^{n}\sum_{\nu=1}^{n} r_{\mu\nu} s_\mu t_\nu
 $$
 
 考虑一个从物理空间到位形空间的变换$\mathbf{x=x(q)}$. 进而有$\mathbf{\dot{x}} = \frac{\partial \mathbf{x}}{\partial q^\alpha} \dot{q^\alpha}$，$\mathbf{\ddot{x}}= \frac{\partial \mathbf{x}}{\partial q^\alpha} \ddot{q^\alpha} + \frac{\partial^2 \mathbf{x}}{\partial q^\alpha q^\beta}\ddot{q^\alpha}\dot{q^\beta}$. 带入牛顿第二定律：
