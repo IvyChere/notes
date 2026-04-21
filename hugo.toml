@@ -66,6 +66,11 @@ enableRobotsTXT = true
     url = "/categories/"
     weight = 20
 
+  [[menu.main]]
+  name = "Ivy_C"
+  url = "/about/"
+  weight = 20
+
 # 社交链接配置
 [[params.socialIcons]]
   name = "github"
