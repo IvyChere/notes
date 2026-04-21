@@ -31,6 +31,9 @@ $$
 
 $$
 T \sin \theta = - m \ddot{x} \\
+$$
+
+$$
 mg - T \cos \theta =m \ddot{y}
 $$
 
@@ -45,8 +48,11 @@ $$
 对约束方程求二次导数：
 
 $$
-x\dot{x} + y\dot{y} = 0 \Rightarrow \dot{y} = -\frac{x}{y} \dot{x}\\
-\dot{x}^2 + x \ddot{x} + \dot{y}^2 + y \ddot{y} = 0 
+x\dot{x} + y\dot{y} = 0 \Rightarrow \dot{y} = -\frac{x}{y} \dot{x} 
+$$
+
+$$
+\dot{x}^2 + x \ddot{x} + \dot{y}^2 + y \ddot{y} = 0
 $$
 
 消去$\mathrm{y, \dot{y}, \ddot{y}}$得到：
@@ -90,6 +96,9 @@ $$
 
 $$
 \sum_{i=1}^{n} p_i q_i := p_i q_i \\
+$$
+
+$$
 \sum_{\mu=1}^{n} \sum_{\nu=1}^{n} r_{\mu\nu} s_\mu t_\nu := r_{\mu\nu} s_\mu t_\nu
 $$
 
@@ -99,6 +108,16 @@ $$
 \mathbf{F} = m(\frac{\partial \mathbf{x}}{\partial q^\alpha} \ddot{q^\alpha} + \frac{\partial^2 \mathbf{x}}{\partial q^\alpha q^\beta}\ddot{q^\alpha}\dot{q^\beta})
 $$
 
-也是一个二阶微分方程。故在位形空间下，我们也只需要广义坐标$\mathbf{q}$与广义速度$\mathbf{\dot{q}}$就可以确定一个物理系统的演化。
+也是一个二阶微分方程. 故在位形空间下，我们也只需要广义坐标$\mathbf{q}$与广义速度$\mathbf{\dot{q}}$就可以确定一个物理系统的演化. 
+
+
+
+### 2. $D'Alenbert$原理
+
+约束的问题解决了. 可我们又遇到了一个新的问题：按照我们上面的做法，我们需要求出在某套广义坐标$\mathbf{q}$下牛顿第二定律的具体形式，才可以对运动学问题进行求解. 我们能否想办法绕过牛顿第二定律，找到某种可以一劳永逸的方法呢？
+
+在讨论这个问题之前，我想先介绍另一道题。
+
+![](./../../static/images/Blog1.1.png)
 
 
