@@ -39,6 +39,12 @@ enableRobotsTXT = true
   # 是否禁用页面滚动到顶部的按钮
   disableScrollToTop = false
 
+[markup.goldmark.extensions.passthrough]
+ enable = true
+[markup.goldmark.extensions.passthrough.delimiters]
+  block = [["\\[", "\\]"], ["$$", "$$"]]
+  inline = [["\\(", "\\)"]]
+
 # 导航栏菜单配置
 [[menu.main]]
   identifier = "archives"
@@ -66,3 +72,4 @@ enableRobotsTXT = true
 [[params.socialIcons]]
   name = "twitter"
   url = "https://twitter.com/你的用户名"
+
