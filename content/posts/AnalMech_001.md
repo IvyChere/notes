@@ -5,7 +5,8 @@ math = true
 title = '分析力学 001'
 tags = ['物理', '分析力学']
 categories = ['物理']
-description = "从牛顿到拉格朗日"
+description = "从牛顿力学出发..."
+summary = "从牛顿第二定律到拉格朗日方程"
 +++
 
 ### 1. 牛顿第二定律
@@ -36,7 +37,7 @@ $$
 消去$\mathrm{T}$得到：
 
 $$
-\mathrm{\ddot{x}} + (\mathrm{\ddot{y}-g}) \frac{x} {y}= 0 \Rightarrow \mathrm{ \ddot{x} y + x(\ddot{y} - g) = 0}
+\mathrm{\ddot{x}} + (\mathrm{\ddot{y}-g)\frac{x} {y}}= 0 \Rightarrow \mathrm{ \ddot{x} y + x(\ddot{y} - g) = 0}
 $$
 
 不幸的是，在这样的情形下，仅凭借牛顿第二定律无法帮助我们得到单摆的运动方程. 原因是显而易见的：在这个情景下，质点不是在整个空间内不受束缚地自由运动. 它的运动受到了几何上的**约束**$\mathrm{x^2+y^2} = l^2$，即摆绳不可自由伸长. 只有联立这两个方程，才能最终解出单摆的运动方程. 
@@ -62,3 +63,15 @@ $$
 
 - 牛顿第二定律是矢量定律，必须要考虑各个分量上的运动。而由于约束的存在，某些分量上的运动又不是互相独立的
 - 在物理坐标$(x, y)$下，哪怕对于某些简单的运动，其运动方程也极其复杂
+
+这些问题可以归结为：**我们能否找到一组相互独立的坐标$(q^1, q^2)$，使得我们可以不考虑约束的存在，而直接利用牛顿第二定律求解运动方程？**
+
+幸运的是，这样的坐标是存在的. 
+
+容易发现，在极坐标系下，单摆的位置可以由半径与摆角$(\rho, \theta)$这一对坐标描述，而由于几何约束，$\rho \equiv l$. 因此，我们只需要考虑$\theta$方向的运动即可. 此时，由极坐标下的牛顿第二定律：$\mathrm{F}_{\theta} = \mathrm{m(\rho \ddot{\theta} + 2 \dot{\rho}\dot{\theta})}$可以得出：
+
+$$
+\mathrm{mg \sin \theta} = - \mathrm{m}l\ddot{\theta} \Rightarrow \ddot{\theta} + \frac{\mathrm{g}}{l} \sin \theta
+$$
+
+
