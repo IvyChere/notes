@@ -118,6 +118,6 @@ $$
 
 在讨论这个问题之前，我想先介绍另一道题。
 
-![](./../../static/images/Blog1.1.png)
+![](./C:/images/Blog1.1.png)
 
 
