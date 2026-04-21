@@ -14,7 +14,7 @@ summary = "从牛顿第二定律到拉格朗日方程"
 在牛顿力学的视角下，质点的运动规律都服从一个二阶微分方程
 
 $$
-\mathbf{F}=\mathrm{m}\mathbf{\ddot{x}}
+\mathbf{F}=m\mathbf{\ddot{x}}
 $$
 
 对于不同的力， $\mathbf{F}$ 的形式有所不同。但是只要代入求解上述的微分方程，再加上 $\textbf{x} $与 $\mathbf{\ddot{x}}$ 的初值条件，我们就可以得到这一个质点的运动方程$\mathbf{x} = \mathbf{x}(\mathrm{t})$ .
@@ -30,14 +30,14 @@ $$
 由牛顿第二定律，在$x$轴与$y$轴方向上：
 
 $$
-\mathrm{T} \sin \theta = - \mathrm{m} \mathrm{\ddot{x}} \\
-\mathrm{mg} - \mathrm{T} \cos \theta =\mathrm{m} \mathrm{\ddot{y}} 
+T \sin \theta = - m \ddot{x} \\
+mg - T \cos \theta =m \ddot{y}
 $$
 
 消去$\mathrm{T}$得到：
 
 $$
-\mathrm{\ddot{x}} + (\mathrm{\ddot{y}-g)\frac{x} {y}}= 0 \Rightarrow \mathrm{ \ddot{x} y + x(\ddot{y} - g) = 0}
+\ddot{x} + (\ddot{y}-g)\frac{x} {y}= 0 \Rightarrow \ddot{x} y + x(\ddot{y} - g) = 0
 $$
 
 不幸的是，在这样的情形下，仅凭借牛顿第二定律无法帮助我们得到单摆的运动方程. 原因是显而易见的：在这个情景下，质点不是在整个空间内不受束缚地自由运动. 它的运动受到了几何上的**约束**$\mathrm{x^2+y^2} = l^2$，即摆绳不可自由伸长. 只有联立这两个方程，才能最终解出单摆的运动方程. 
@@ -45,19 +45,21 @@ $$
 对约束方程求二次导数：
 
 $$
-\mathrm{ x\dot{x} + y\dot{y} = 0} \Rightarrow \mathrm{\dot{y} = -\frac{x}{y} \dot{x}}\\
-\mathrm{ \dot{x}^2 + x \ddot{x} + \dot{y}^2 + y \ddot{y} = 0 }
+x\dot{x} + y\dot{y} = 0 \Rightarrow \dot{y} = -\frac{x}{y} \dot{x}\\
+\dot{x}^2 + x \ddot{x} + \dot{y}^2 + y \ddot{y} = 0 
 $$
 
 消去$\mathrm{y, \dot{y}, \ddot{y}}$得到：
 
 $$
-\mathrm{\ddot{x} + \frac{x}{L^2 - x^2} \dot{x}^2 + \frac{g}{L^2} x \sqrt{L^2 - x^2} = 0}
+\ddot{x} + \frac{x}{L^2 - x^2} \dot{x}^2 + \frac{g}{L^2} x \sqrt{L^2 - x^2} = 0
 $$
 
 同理可得到$\mathrm{y}$分量的运动方程. 
 
-#### 1.2 传统方法的不足
+#### 1.2 广义坐标与位形空间
+
+##### 1.2.1 旧有方法的不足
 
 到这里，我们可以发现传统的牛顿第二定律在描述质点运动时的不足：
 
@@ -73,5 +75,30 @@ $$
 $$
 \mathrm{mg \sin \theta} = - \mathrm{m}l\ddot{\theta} \Rightarrow \ddot{\theta} + \frac{\mathrm{g}}{l} \sin \theta
 $$
+
+简单又简洁. 
+
+事实上，对于任意一个带约束的力学系统，我们都可以找到一组两两独立的新坐标$\mathbf{q}=(q^1, q^2, \dots, q^s)$. 我们在这组坐标下使用牛顿第二定律，便可求解出系统的运动方程，而不用考虑系统所受具体的约束. 这样的坐标称为 **“广义坐标”**. 区别于由世界中真实可感的物理坐标$\mathbf{x}=(x^1, x^2, \dots, x^N)$张成的“物理空间”，广义坐标张成的空间称为 **“位形空间”**，这是一个抽象的空间，其中的每一点都可以确定系统演化的某一个具体状态. 
+
+##### 1.2.2 位形空间中的动力学
+
+我们前面提到过，在物理空间中，根据牛顿第二定律$\mathbf{F} = m \mathbf{\ddot{x}}$，系统的演化都可以由多个二阶微分方程决定。我们只要知道$\mathbf{x}$与$\mathbf{\dot{x}}$的初值条件，就可以确定这个系统的运动方程. 也就是说，一个物理系统可以由某时刻的位置$\mathbf{x}$与速度$\mathbf{\dot{x}}$确定. 换言之，如果我要使用某个状态函数$S$来刻画一个物理系统的演化，只需要以$t$，$\mathbf{x}$与$\mathbf{\dot{x}}$作为参数即可. 
+
+这个结论在位形空间中是否成立呢？要研究这个问题，我们只需要知道位形空间中牛顿第二定律的阶数即可.
+
+为了书写方便，我们将引入$Einstein$求和约定：**当一个表达式中出现了重复的指标（包括上标、下标）时，将这个重复指标视为求和索引，对表达式进行遍历求和**：
+
+$$
+\sum_{i=1}^{n} p_i q_i := p_i q_i \\
+\sum_{\mu=1}^{n} \sum_{\nu=1}^{n} r_{\mu\nu} s_\mu t_\nu := r_{\mu\nu} s_\mu t_\nu
+$$
+
+考虑一个从物理空间到位形空间的变换$\mathbf{x=x(q)}$. 进而有$\mathbf{\dot{x}} = \frac{\partial \mathbf{x}}{\partial q^\alpha} \dot{q^\alpha}$，$\mathbf{\ddot{x}}= \frac{\partial \mathbf{x}}{\partial q^\alpha} \ddot{q^\alpha} + \frac{\partial^2 \mathbf{x}}{\partial q^\alpha q^\beta}\ddot{q^\alpha}\dot{q^\beta}$. 带入牛顿第二定律：
+
+$$
+\mathbf{F} = m(\frac{\partial \mathbf{x}}{\partial q^\alpha} \ddot{q^\alpha} + \frac{\partial^2 \mathbf{x}}{\partial q^\alpha q^\beta}\ddot{q^\alpha}\dot{q^\beta})
+$$
+
+也是一个二阶微分方程。故在位形空间下，我们也只需要广义坐标$\mathbf{q}$与广义速度$\mathbf{\dot{q}}$就可以确定一个物理系统的演化。
 
 
