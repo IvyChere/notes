@@ -9,7 +9,7 @@ description = "从牛顿力学出发..."
 summary = "从牛顿第二定律到拉格朗日方程"
 +++
 
-### 1. 牛顿第二定律
+## 1. 牛顿第二定律
 
 在牛顿力学的视角下，质点的运动规律都服从一个二阶微分方程
 
@@ -21,7 +21,7 @@ $$
 
 看起来，牛顿第二定律似乎足够我们解决大多数的动力学问题了. 但是对于具体的物理情景而言，情况似乎要复杂得多.
 
-#### 1.1 物理坐标$(x, y)$下的单摆运动
+### 1.1 物理坐标$(x, y)$下的单摆运动
 
 例如，我们考虑匀重力场$\mathbf{g}$下一个摆长为$l$单摆的运动：
 
@@ -63,9 +63,9 @@ $$
 
 同理可得到$\mathrm{y}$分量的运动方程. 
 
-#### 1.2 广义坐标与位形空间
+### 1.2 广义坐标与位形空间
 
-##### 1.2.1 旧有方法的不足
+#### 1.2.1 旧有方法的不足
 
 到这里，我们可以发现传统的牛顿第二定律在描述质点运动时的不足：
 
@@ -86,7 +86,7 @@ $$
 
 事实上，对于任意一个带约束的力学系统，我们都可以找到一组两两独立的新坐标$\mathbf{q}=(q^1, q^2, \dots, q^s)$. 我们在这组坐标下使用牛顿第二定律，便可求解出系统的运动方程，而不用考虑系统所受具体的约束. 这样的坐标称为 **“广义坐标”**. 区别于由世界中真实可感的物理坐标$\mathbf{x}=(x^1, x^2, \dots, x^N)$张成的“物理空间”，广义坐标张成的空间称为 **“位形空间”**，这是一个抽象的空间，其中的每一点都可以确定系统演化的某一个具体状态. 
 
-##### 1.2.2 位形空间中的动力学
+#### 1.2.2 位形空间中的动力学
 
 我们前面提到过，在物理空间中，根据牛顿第二定律$\mathbf{F} = m \mathbf{\ddot{x}}$，系统的演化都可以由多个二阶微分方程决定。我们只要知道$\mathbf{x}$与$\mathbf{\dot{x}}$的初值条件，就可以确定这个系统的运动方程. 也就是说，一个物理系统可以由某时刻的位置$\mathbf{x}$与速度$\mathbf{\dot{x}}$确定. 换言之，如果我要使用某个状态函数$S$来刻画一个物理系统的演化，只需要以$t$，$\mathbf{x}$与$\mathbf{\dot{x}}$作为参数即可. 
 
@@ -112,15 +112,15 @@ $$
 
 
 
-### 2. $D'Alembert$原理
+## 2. $D'Alembert$原理与$Euler-Lagrange$方程
 
 约束的问题解决了. 可我们又遇到了一个新的问题：按照我们上面的做法，我们需要求出在某套广义坐标$\mathbf{q}$下牛顿第二定律的具体形式，才可以对运动学问题进行求解. 我们能否想办法绕过牛顿第二定律，找到某种可以一劳永逸的方法呢？
 
 在讨论这个问题之前，我想先介绍另一道题. 
 
-#### 2.1 虚位移、虚功
+### 2.1 虚位移、虚功
 
-##### 2.1.1 虚位移
+#### 2.1.1 虚位移
 
 ![](/images/Blog1.1.png)
 
@@ -156,7 +156,7 @@ $$
 
 
 
-##### 2.1.2 虚功原理
+#### 2.1.2 虚功原理
 
 虚位移是一个非常有用的工具。一方面，我们可以求出力在虚位移上做的**虚功**$\delta W = \mathbf{F \cdot \delta r}$，将质点某时刻受到的力同做功——进而同能量联系起来；另一方面，由于虚位移并没有实际发生，因此质点的运动状态并没有发生改变. 特殊地，当质点处于平衡状态时，其所受合外力的虚功$\delta W = 0$. 我们称之为**虚功原理**.
 
@@ -171,7 +171,7 @@ $$
 这个质点的运动不满足平衡条件. 但是只要我们对这个式子进行简单的变形
 
 $$
-\mathbf{F + R} - m\mathbf{\ddot{r}} = 0
+\mathbf{F + R} - m\mathbf{\ddot{r}} = \mathbf{0}
 $$
 
 这个时候，等式右边为0，质点的运动不就是平衡的了吗？我们管$\mathbf{f} = - m \mathbf{\ddot{r}}$叫做惯性力. 也就是说，对于一般的运动，质点所受的自由合外力$\mathbf F$，约束力$\mathbf R$与惯性力$-m\mathbf{\ddot r}$三力平衡.
@@ -236,7 +236,7 @@ $$
 \mathbf{\dot r} = \frac{\partial \mathbf{r}}{\partial q^\beta}\dot q^\beta
 $$
 
-注意，这里有出现了重复指标$\beta$，注意$Einstein$求和约定！
+这里有出现重复指标$\beta$，注意$Einstein$求和约定！
 
 从这里，我们可以得到一个结论：
 
@@ -280,9 +280,59 @@ $$
 
 这个式子称为$D'Alambert$虚功原理.
 
+#### 2.1.3 $Euler-Lagrange$方程
 
+我们来看看广义力又是什么.
 
+假如质点只受到保守自由外力的作用，即自由外力做功与路径无关，而只与做功的初末位置有关，则有$\mathbf{F} = -\nabla V(\mathbf r, t)=-\frac{\partial V}{\partial \mathbf r}$. 代入广义力的定义式，并结合链式法则，可以得到
 
+$$
+Q_\alpha = \mathbf {F} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha} = -\frac{\partial V}{\partial \mathbf r} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha} = -\frac{\partial V}{\partial q^\alpha}
+$$
+
+代入$D'Alembert$虚功原理的表达式，整理得：
+
+$$
+\frac{\mathrm d}{\mathrm d t}(\frac{\partial T}{\partial \dot q^\alpha}) - \frac{\partial (T - V)}{\partial q^\alpha} 
+$$
+
+我们定义$L(t, \mathbf{q,\dot q }) = T - V$. 绝大多数情况下，动能$T$都是关于速度$\mathbf {\dot q}$的函数，而与位置$\mathbf q$无关；势能$V$都是关于位置$\mathbf { q}$的函数，而与速度$\mathbf {\dot q}$无关. 因此，上式可以改写成
+
+$$
+\frac{\mathrm d}{\mathrm d t}(\frac{\partial L}{\partial \dot q^\alpha}) - \frac{\partial L}{\partial q^\alpha} =0
+$$
+
+这个方程称为$Euler-Lagrange$方程. $L(t, \mathbf{q,\dot q })$称为系统的**拉格朗日量**$Lagrangian$. 我们将其反代回$D'Alembert$虚功原理表达式：
+
+$$
+Q_\alpha = \frac{\mathrm d}{\mathrm d t}(\frac{\partial (L+V)}{\partial \dot q^\alpha}) - \frac{\partial (L+V)}{\partial q^\alpha} 
+\Rightarrow
+Q_\alpha = \underbrace{[\frac{\mathrm d}{\mathrm d t}(\frac{\partial L}{\partial \dot q^\alpha}) - \frac{\partial L}{\partial q^\alpha}]}_{\text{0}} + [\frac{\mathrm d}{\mathrm d t}(\frac{\partial V}{\partial \dot q^\alpha}) - \frac{\partial V}{\partial q^\alpha}]
+$$
+
+即
+
+$$
+Q_\alpha = \frac{\mathrm d}{\mathrm d t}(\frac{\partial V}{\partial \dot q^\alpha}) - \frac{\partial V}{\partial q^\alpha}
+$$
+
+对于任意一个力学系统：
+
+- 当我们知道它的动能$T$与势能$V$的表达式时，我们就可以直接使用$Euler-Lagrange$方程求解出物体各个分量上的运动方程
+
+- 当我们知道广义力的表达式$Q_\alpha$时，我们可以利用$D'Alembert$虚功原理求解出其势能$V$，随后可以进一步得到它的拉格朗日量
+
+我们以后会发现：$L(t, \mathbf{q,\dot q }) = T - V$只在低速（$v \ll c$）弱场（$V \ll mc^2$）时才成立. 一般情形下的拉格朗日量我们将在之后说明. 
+
+特殊地，对于牛顿力学下的一个质点，$T = \frac{1}{2}m(\mathbf{\dot r})^2$，$V = V(\mathbf r)$，其$Euler-Lagrange$方程
+
+$$
+\frac{\mathrm d}{\mathrm d t}(m\mathbf{\dot r}) + \frac{\partial V}{\partial \mathbf{r}} = 0
+\Rightarrow
+\mathbf F = \frac{\mathrm d (m\mathbf v)}{\mathrm d t} = m \mathbf{\ddot r}
+$$
+
+退化为了牛顿第二定律的形式. 这说明，在牛顿力学的体系下，牛顿第二定律与$Euler-Lagrange$方程等价.
 
 
 
