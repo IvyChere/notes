@@ -102,7 +102,7 @@ $$
 r_{\mu\nu} s_\mu t_\nu:= \sum_{\mu=1}^{n}\sum_{\nu=1}^{n} r_{\mu\nu} s_\mu t_\nu
 $$
 
-考虑一个从物理空间到位形空间的变换$\mathbf{x=x(q)}$. 进而有$\mathbf{\dot{x}} = \frac{\partial \mathbf{x}}{\partial q^\alpha} \dot{q^\alpha}$，$\mathbf{\ddot{x}}= \frac{\partial \mathbf{x}}{\partial q^\alpha} \ddot{q^\alpha} + \frac{\partial^2 \mathbf{x}}{\partial q^\alpha q^\beta}\ddot{q^\alpha}\dot{q^\beta}$. 带入牛顿第二定律：
+考虑一个从物理空间到位形空间的变换$\mathbf{x=x(q)}$. 进而有$\mathbf{\dot{x}} = \frac{\partial \mathbf{x}}{\partial q^\alpha} \dot{q^\alpha}$，$\mathbf{\ddot{x}}= \frac{\partial \mathbf{x}}{\partial q^\alpha} \ddot{q^\alpha} + \frac{\partial^2 \mathbf{x}}{\partial q^\alpha q^\beta}\ddot{q^\alpha}\dot{q^\beta}$. 代入牛顿第二定律：
 
 $$
 \mathbf{F} = m(\frac{\partial \mathbf{x}}{\partial q^\alpha} \ddot{q^\alpha} + \frac{\partial^2 \mathbf{x}}{\partial q^\alpha q^\beta}\ddot{q^\alpha}\dot{q^\beta})
@@ -186,7 +186,7 @@ $$
 (\mathbf{F + R} - m\mathbf{\ddot r}) \cdot \mathbf{\delta r} = 0
 $$
 
-绝大多数情况下，约束力$\mathbf R$与几何约束垂直（我们称此时的约束为**理想约束**）. 由$\nabla \Phi \cdot \mathbf{\delta r}=0$可得，$\mathbf{R \cdot \delta r} = 0$. 故上式可以化为
+绝大多数情况下，约束力$\mathbf R$与几何约束面垂直（我们称此时的约束为**理想约束**）. 由$\nabla \Phi \cdot \mathbf{\delta r}=0$可得，$\mathbf{R \cdot \delta r} = 0$. 故上式可以化为
 
 $$
 (\mathbf{F} - m \mathbf{\ddot{r}}) \cdot \mathbf{\delta r} = 0
@@ -320,7 +320,7 @@ $$
 
 - 当我们知道它的动能$T$与势能$V$的表达式时，我们就可以直接使用$Euler-Lagrange$方程求解出物体各个分量上的运动方程
 
-- 当我们知道广义力的表达式$Q_\alpha$时，我们可以利用$D'Alembert$虚功原理求解出其势能$V$，随后可以进一步得到它的拉格朗日量，从而解出它的运动方程
+- 当我们知道广义力的表达式$Q_\alpha$[^4]时，我们可以利用$D'Alembert$虚功原理求解出其势能$V$，随后可以进一步得到它的拉格朗日量，从而解出它的运动方程
 
 我们以后会发现：$L(t, \mathbf{q,\dot q }) = T - V$只在低速（$v \ll c$）弱场（$V \ll mc^2$）时才成立. 一般情形下的拉格朗日量我们将在之后说明. 
 
@@ -349,3 +349,5 @@ $$
 [^2]: 这个定义是自然的. 因为自由外力做的虚功$\delta W_{\mathbf{F}} = \mathbf{F \cdot \delta r} = \mathbf {F} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha} \delta q^\alpha = Q_\alpha \delta q^\alpha$（最后两个等号使用了$Einstein$求和约定），即自由外力在物理坐标下的虚功等于广义力在广义坐标下的虚功. 
 
 [^3]: 位形指的是系统中各个质点的空间位置，或者更一般物理系统的形状、分布等. 系统所有的位形组成的集合称作位形空间. 因此严格来讲，位形空间并不只能用广义坐标描述，只是在分析力学中我们常用广义坐标而已. 
+
+[^4]: 事实上，即使当广义力不是保守力时（即传统意义上的势能$V$不存在时），这个方法仍然有效. 这个时候，我们称$V$为**广义势能**. 我们可以用这个方法利用$Euler-Lagrange$方程求解耗散系统（比如磁场中运动的带电粒子）的运动方程. 
