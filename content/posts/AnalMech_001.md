@@ -247,7 +247,7 @@ $$
 而另一部分
 
 $$
-\frac{\mathrm d}{\mathrm d t}\left( \frac {\partial \mathbf{r}}{\partial q^\alpha}\right)  = \frac{\partial}{\partial q^\beta}\left( \frac {\partial \mathbf{r}}{\partial q^\alpha}\right) \dot q^\beta = \frac{\partial}{\partial q^\alpha}[\left( \frac {\partial \mathbf{r}}{\partial q^\beta}\right) \dot q^\beta] = \frac{\partial \mathbf{\dot r}}{\partial q^\alpha}
+\frac{\mathrm d}{\mathrm d t}\left( \frac {\partial \mathbf{r}}{\partial q^\alpha}\right)  = \frac{\partial}{\partial q^\beta}\left( \frac {\partial \mathbf{r}}{\partial q^\alpha}\right) \dot q^\beta = \frac{\partial}{\partial q^\alpha}\left[\left( \frac {\partial \mathbf{r}}{\partial q^\beta}\right) \dot q^\beta\right] = \frac{\partial \mathbf{\dot r}}{\partial q^\alpha}
 $$
 
 从而我们得到：
