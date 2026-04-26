@@ -42,10 +42,10 @@ enableRobotsTXT = true
   search = true
 
 [markup.goldmark.extensions.passthrough]
- enable = true
+  enable = true
 [markup.goldmark.extensions.passthrough.delimiters]
   block = [["\\[", "\\]"], ["$$", "$$"]]
-  inline = [["\\(", "\\)"]]
+  inline = [["\\(", "\\)"], ["$", "$"]]
 
 # 导航栏菜单配置
 
