@@ -1,6 +1,6 @@
 +++
 date = '2026-04-22T20:04:37+08:00'
-draft = true
+draft = false
 math = true
 title = '分析力学 002'
 tags = ['物理', '分析力学']
@@ -8,6 +8,8 @@ categories = ['物理']
 description = "泛函、变分法与最小作用量原理"
 summary = "泛函、变分法与最小作用量原理"
 +++
+
+
 
 ### 0. 从最速降线问题讲起......
 
@@ -28,21 +30,19 @@ $$
 其中
 
 $$
-\mathrm d s = \sqrt{1 + (y')^2} \mathrm d x
+\mathrm d s = \sqrt{1 + \left(y'\right)^2} \mathrm d x
 $$
 
 代入得：
 
 $$
-\mathrm d t = \sqrt{\frac{1 + (y')^2}{2gy}} \mathrm d x \Rightarrow
+\mathrm d t = \sqrt{\frac{1 + \left(y'\right)^2}{2gy}} \mathrm d x \Rightarrow
 $$
 
 $$
-t(x, y, y') = \int_{0}^{x_0} \sqrt{\frac{1 + (y')^2}{2gy}} \mathrm d x
+t(y, y') = \int_{0}^{x_0} \sqrt{\frac{1 + \left(y'\right)^2}{2gy}} \mathrm d x
 $$
 
-我们遇到一个很尴尬的问题：求解这个问题，相当于要找到一个函数$y = y(x)$，使得$t(x, y, y')$取得最小值. 这与我们从前见过的问题截然不同. 
-
-
+我们遇到一个很尴尬的问题：求解这个问题，相当于要找到一个函数$y = y(x)$，使得$t(x, y, y')$取得最小值. 这与我们从前见过的问题截然不同. 我们以往讨论的问题中，函数的值取决于函数自变量所取的值；而在这里，影响$t$大小的已不再是某一个变量的取值，而是某个函数$y = y(x)$的具体形式. 因此，我们需要一个新的数学工具来帮助我们处理这个问题. 
 
 

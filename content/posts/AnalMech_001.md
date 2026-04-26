@@ -40,7 +40,7 @@ $$
 消去$\mathrm{T}$得到：
 
 $$
-\ddot{x} + (\ddot{y}-g)\frac{x} {y}= 0 \Rightarrow \ddot{x} y + x(\ddot{y} - g) = 0
+\ddot{x} + \left(\ddot{y}-g\right)\frac{x} {y}= 0 \Rightarrow \ddot{x} y + x\left(\ddot{y} - g\right) = 0
 $$
 
 不幸的是，在这样的情形下，仅凭借牛顿第二定律无法帮助我们得到单摆的运动方程. 原因是显而易见的：在这个情景下，质点不是在整个空间内不受束缚地自由运动. 它的运动受到了几何上的**约束**$\mathrm{x^2+y^2} = l^2$，即摆绳不可自由伸长. 只有联立这两个方程，才能最终解出单摆的运动方程. 
@@ -105,7 +105,7 @@ $$
 考虑一个从物理空间到位形空间的变换$\mathbf{x=x(q)}$. 进而有$\mathbf{\dot{x}} = \frac{\partial \mathbf{x}}{\partial q^\alpha} \dot{q^\alpha}$，$\mathbf{\ddot{x}}= \frac{\partial \mathbf{x}}{\partial q^\alpha} \ddot{q^\alpha} + \frac{\partial^2 \mathbf{x}}{\partial q^\alpha q^\beta}\ddot{q^\alpha}\dot{q^\beta}$. 代入牛顿第二定律：
 
 $$
-\mathbf{F} = m(\frac{\partial \mathbf{x}}{\partial q^\alpha} \ddot{q^\alpha} + \frac{\partial^2 \mathbf{x}}{\partial q^\alpha q^\beta}\ddot{q^\alpha}\dot{q^\beta})
+\mathbf{F} = m\left( \frac{\partial \mathbf{x}}{\partial q^\alpha} \ddot{q^\alpha} + \frac{\partial^2 \mathbf{x}}{\partial q^\alpha q^\beta}\ddot{q^\alpha}\dot{q^\beta} \right)
 $$
 
 也是一个二阶微分方程. 故在位形空间下，我们也只需要广义坐标$\mathbf{q}$与广义速度$\mathbf{\dot{q}}$就可以确定一个物理系统的演化. 
@@ -143,7 +143,7 @@ $$
 设质点的位置为$\mathbf r$，系统的约束为$\Phi(\mathbf r) = 0$. 质点发生虚位移$\delta \mathbf r$时，由定义，质点的位置仍然符合约束条件，即
 
 $$
-\Phi (\mathbf{r + \delta r}) = 0
+\Phi \left(\mathbf{r + \delta r}\right) = 0
 $$
 
 展开
@@ -183,13 +183,13 @@ $$
 说干就干. 此时，由虚功原理，合外力所做的虚功
 
 $$
-(\mathbf{F + R} - m\mathbf{\ddot r}) \cdot \mathbf{\delta r} = 0
+\left(\mathbf{F + R} - m\mathbf{\ddot r}\right) \cdot \mathbf{\delta r} = 0
 $$
 
 绝大多数情况下，约束力$\mathbf R$与几何约束面垂直（我们称此时的约束为**理想约束**）. 由$\nabla \Phi \cdot \mathbf{\delta r}=0$可得，$\mathbf{R \cdot \delta r} = 0$. 故上式可以化为
 
 $$
-(\mathbf{F} - m \mathbf{\ddot{r}}) \cdot \mathbf{\delta r} = 0
+\left(\mathbf{F} - m \mathbf{\ddot{r}}\right) \cdot \mathbf{\delta r} = 0
 $$
 
 另一方面，既然都存在约束，那么更方便的选择一定是选取一组两两独立的广义坐标$\mathbf{q}=(q^1, q^2, \dots, q^s)$，再对系统进行描述. 广义坐标与物理坐标之间存在变换$\mathbf{r = r(q)}$，那么我们可以得到
@@ -207,7 +207,7 @@ $$
 从而有
 
 $$
-(\mathbf {F} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha} - m \mathbf{\ddot r} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha})\delta q^\alpha =0
+\left( \mathbf {F} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha} - m \mathbf{\ddot r} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha}\right) \delta q^\alpha =0
 $$
 
 由于广义坐标$\mathbf q = (q^1, q^2, \dots, q^s)$这$s$个变量两两独立，为使上面这个$s$项和式（牢记$Einstein$求和约定！）为$0$，则其中的每一项系数
@@ -227,7 +227,7 @@ $$
 我们考虑等号右边，利用分部积分法可以得到：
 
 $$
-m \mathbf{\ddot r} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha} = m \frac{\mathrm d}{\mathrm d t}(\mathbf{\dot r} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha}) - m\mathbf{\dot r} \cdot \frac{\mathrm d}{\mathrm d t}(\frac {\partial \mathbf{r}}{\partial q^\alpha})
+m \mathbf{\ddot r} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha} = m \frac{\mathrm d}{\mathrm d t}\left( \mathbf{\dot r} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha}\right) - m\mathbf{\dot r} \cdot \frac{\mathrm d}{\mathrm d t}\left( \frac {\partial \mathbf{r}}{\partial q^\alpha}\right)
 $$
 
 其中：
@@ -247,19 +247,19 @@ $$
 而另一部分
 
 $$
-\frac{\mathrm d}{\mathrm d t}(\frac {\partial \mathbf{r}}{\partial q^\alpha}) = \frac{\partial}{\partial q^\beta}(\frac {\partial \mathbf{r}}{\partial q^\alpha}) \dot q^\beta = \frac{\partial}{\partial q^\alpha}[(\frac {\partial \mathbf{r}}{\partial q^\beta}) \dot q^\beta] = \frac{\partial \mathbf{\dot r}}{\partial q^\alpha}
+\frac{\mathrm d}{\mathrm d t}\left( \frac {\partial \mathbf{r}}{\partial q^\alpha}\right)  = \frac{\partial}{\partial q^\beta}\left( \frac {\partial \mathbf{r}}{\partial q^\alpha}\right) \dot q^\beta = \frac{\partial}{\partial q^\alpha}[\left( \frac {\partial \mathbf{r}}{\partial q^\beta}\right) \dot q^\beta] = \frac{\partial \mathbf{\dot r}}{\partial q^\alpha}
 $$
 
 从而我们得到：
 
 $$
-m \mathbf{\ddot r} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha} =\frac{\mathrm d}{\mathrm d t}(m\mathbf{\dot r} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha}) - m\mathbf{\dot r} \cdot \frac {\partial \mathbf{\dot r}}{\partial q^\alpha}
+m \mathbf{\ddot r} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha} =\frac{\mathrm d}{\mathrm d t}\left( m\mathbf{\dot r} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha}\right) - m\mathbf{\dot r} \cdot \frac {\partial \mathbf{\dot r}}{\partial q^\alpha}
 $$
 
 即
 
 $$
-Q_\alpha = \frac{\mathrm d}{\mathrm d t}(m\mathbf{\dot r} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha}) - m\mathbf{\dot r} \cdot \frac {\partial \mathbf{\dot r}}{\partial q^\alpha}
+Q_\alpha = \frac{\mathrm d}{\mathrm d t}\left( m\mathbf{\dot r} \cdot \frac {\partial \mathbf{r}}{\partial q^\alpha}\right) - m\mathbf{\dot r} \cdot \frac {\partial \mathbf{\dot r}}{\partial q^\alpha}
 $$
 
 我们考虑系统的动能$T(\mathbf{\dot r}) = \frac{1}{2}m(\mathbf{\dot r})^2$
@@ -275,7 +275,7 @@ $$
 因此，我们可以得到：
 
 $$
-Q_\alpha = \frac{\mathrm d}{\mathrm d t}(\frac{\partial T}{\partial \dot q^\alpha}) - \frac{\partial T}{\partial q^\alpha} 
+Q_\alpha = \frac{\mathrm d}{\mathrm d t}\left( \frac{\partial T}{\partial \dot q^\alpha}\right) - \frac{\partial T}{\partial q^\alpha} 
 $$
 
 这个式子称为$D'Alambert$虚功原理.
@@ -293,7 +293,7 @@ $$
 代入$D'Alembert$虚功原理的表达式，整理得：
 
 $$
-\frac{\mathrm d}{\mathrm d t}(\frac{\partial T}{\partial \dot q^\alpha}) - \frac{\partial (T - V)}{\partial q^\alpha} =0
+\frac{\mathrm d}{\mathrm d t}\left(\frac{\partial T}{\partial \dot q^\alpha}\right) - \frac{\partial \left(T - V\right)}{\partial q^\alpha} =0
 $$
 
 我们定义$L(t, \mathbf{q,\dot q }) = T - V$. 绝大多数情况下，动能$T$都是关于速度$\mathbf {\dot q}$的函数，而与位置$\mathbf q$无关；势能$V$都是关于位置$\mathbf { q}$的函数，而与速度$\mathbf {\dot q}$无关. 因此，上式可以改写成
@@ -305,15 +305,15 @@ $$
 这个方程称为$Euler-Lagrange$方程. $L(t, \mathbf{q,\dot q })$称为系统的**拉格朗日量**$Lagrangian$. 我们将其反代回$D'Alembert$虚功原理表达式：
 
 $$
-Q_\alpha = \frac{\mathrm d}{\mathrm d t}(\frac{\partial (L+V)}{\partial \dot q^\alpha}) - \frac{\partial (L+V)}{\partial q^\alpha} 
+Q_\alpha = \frac{\mathrm d}{\mathrm d t}\left(\frac{\partial \left(L+V\right)}{\partial \dot q^\alpha}\right) - \frac{\partial \left(L+V\right)}{\partial q^\alpha} 
 \Rightarrow
-Q_\alpha = \underbrace{[\frac{\mathrm d}{\mathrm d t}(\frac{\partial L}{\partial \dot q^\alpha}) - \frac{\partial L}{\partial q^\alpha}]}_{\text{0}} + [\frac{\mathrm d}{\mathrm d t}(\frac{\partial V}{\partial \dot q^\alpha}) - \frac{\partial V}{\partial q^\alpha}]
+Q_\alpha = \underbrace{\left[\frac{\mathrm d}{\mathrm d t}\left(\frac{\partial L}{\partial \dot q^\alpha}\right) - \frac{\partial L}{\partial q^\alpha}\right]}_{\text{0}} + \left[\frac{\mathrm d}{\mathrm d t}\left(\frac{\partial V}{\partial \dot q^\alpha}\right) - \frac{\partial V}{\partial q^\alpha}\right]
 $$
 
 即
 
 $$
-Q_\alpha = \frac{\mathrm d}{\mathrm d t}(\frac{\partial V}{\partial \dot q^\alpha}) - \frac{\partial V}{\partial q^\alpha}
+Q_\alpha = \frac{\mathrm d}{\mathrm d t}\left(\frac{\partial V}{\partial \dot q^\alpha}\right) - \frac{\partial V}{\partial q^\alpha}
 $$
 
 对于任意一个力学系统：
@@ -327,9 +327,9 @@ $$
 特殊地，对于牛顿力学下的一个质点，$T = \frac{1}{2}m(\mathbf{\dot r})^2$，$V = V(\mathbf r)$，其$Euler-Lagrange$方程
 
 $$
-\frac{\mathrm d}{\mathrm d t}(m\mathbf{\dot r}) + \frac{\partial V}{\partial \mathbf{r}} = 0
+\frac{\mathrm d}{\mathrm d t}\left(m\mathbf{\dot r}\right) + \frac{\partial V}{\partial \mathbf{r}} = 0
 \Rightarrow
-\mathbf F = \frac{\mathrm d (m\mathbf v)}{\mathrm d t} = m \mathbf{\ddot r}
+\mathbf F = \frac{\mathrm d \left(m\mathbf v\right)}{\mathrm d t} = m \mathbf{\ddot r}
 $$
 
 退化为了牛顿第二定律的形式. 这说明，在牛顿力学的体系下，牛顿第二定律与$Euler-Lagrange$方程等价.
@@ -350,4 +350,4 @@ $$
 
 [^3]: 位形指的是系统中各个质点的空间位置，或者更一般物理系统的形状、分布等. 系统所有的位形组成的集合称作位形空间. 因此严格来讲，位形空间并不只能用广义坐标描述，只是在分析力学中我们常用广义坐标而已. 
 
-[^4]: 事实上，即使当广义力不是保守力时（即传统意义上的势能$V$不存在时），这个方法仍然有效. 这个时候，我们称$V$为**广义势能**. 我们可以用这个方法利用$Euler-Lagrange$方程求解耗散系统（比如磁场中运动的带电粒子）的运动方程. 
+[^4]: 事实上，即使当广义力不是保守力时（即传统意义上的势能$V$不存在时），这个方法仍然有效. 这个时候，我们称$V$为**广义势能**. 我们可以用这个方法利用$Euler-Lagrange$方程求解耗散系统（比如电磁场中运动的带电粒子）的运动方程. 
