@@ -305,7 +305,7 @@ $$
 这个方程称为$Euler-Lagrange$方程. $L(t, \mathbf{q,\dot q })$称为系统的**拉格朗日量**$Lagrangian$. 我们将其反代回$D'Alembert$虚功原理表达式：
 
 $$
-Q_\alpha = \frac{\mathrm d}{\mathrm d t}\left(\frac{\partial \left(L+V\right)}{\partial \dot q^\alpha}\right) - \frac{\partial \left(L+V\right)}{\partial q^\alpha} 
+Q_\alpha = \frac{\mathrm d}{\mathrm d t}\left[\frac{\partial \left(L+V\right)}{\partial \dot q^\alpha}\right] - \frac{\partial \left(L+V\right)}{\partial q^\alpha} 
 \Rightarrow
 Q_\alpha = \underbrace{\left[\frac{\mathrm d}{\mathrm d t}\left(\frac{\partial L}{\partial \dot q^\alpha}\right) - \frac{\partial L}{\partial q^\alpha}\right]}_{\text{0}} + \left[\frac{\mathrm d}{\mathrm d t}\left(\frac{\partial V}{\partial \dot q^\alpha}\right) - \frac{\partial V}{\partial q^\alpha}\right]
 $$
