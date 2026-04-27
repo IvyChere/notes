@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gravity Slingshot – Celestial Mechanics Sandbox</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a14;
+    color: #d0d0e0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; padding: 16px;
+    user-select: none; -webkit-user-select: none;
+  }
+  .main-container {
+    display: flex; flex-wrap: wrap; gap: 16px;
+    max-width: 1360px; width: 100%;
+    align-items: flex-start; justify-content: center;
+  }
+  .canvas-wrapper {
+    position: relative; flex-shrink: 0;
+    border: 2px solid #2a2a4a; border-radius: 10px;
+    overflow: hidden; box-shadow: 0 0 30px rgba(30,30,120,0.5);
+  }
+  canvas { display: block; cursor: crosshair; }
+  .panel {
+    background: #12122a; border: 2px solid #2a2a4a; border-radius: 10px;
+    padding: 18px 20px; min-width: 260px; max-width: 300px; flex: 1;
+    display: flex; flex-direction: column; gap: 14px;
+    box-shadow: 0 0 20px rgba(30,30,120,0.3);
+  }
+  .panel h2 {
+    text-align: center; font-size: 1.15rem; letter-spacing: 1px;
+    color: #88aaff; border-bottom: 1px solid #2a2a5a; padding-bottom: 10px;
+    margin-bottom: 2px;
+  }
+  .control-group { display: flex; flex-direction: column; gap: 4px; }
+  .control-group label {
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1.5px;
+    color: #8899cc; font-weight: 600;
+  }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row input[type="range"] { flex: 1; min-width: 0; }
+  .row input[type="number"] {
+    width: 62px; background: #1a1a35; border: 1px solid #3a3a6a;
+    color: #d0d0e0; border-radius: 5px; padding: 4px 6px;
+    text-align: center; font-size: 0.85rem; font-family: inherit;
+  }
+  .row input[type="number"]:focus { outline: none; border-color: #6688dd; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none; height: 6px;
+    background: #2a2a4a; border-radius: 3px; outline: none; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 18px; height: 18px;
+    border-radius: 50%; background: #6688dd; border: 2px solid #8899ee;
+    cursor: pointer; box-shadow: 0 0 8px rgba(100,130,255,0.5);
+  }
+  .value-display {
+    font-size: 0.8rem; color: #aabbee; text-align: right; min-width: 40px;
+  }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    flex: 1; min-width: 70px; padding: 9px 12px; border: 1px solid #3a3a6a;
+    border-radius: 7px; background: #1a1a38; color: #c0c0e0;
+    cursor: pointer; font-size: 0.85rem; font-family: inherit;
+    letter-spacing: 1px; transition: all 0.15s;
+    white-space: nowrap; text-align: center;
+  }
+  .btn:hover { background: #252550; border-color: #5566aa; }
+  .btn:active { background: #303068; transform: scale(0.97); }
+  .btn.primary { background: #2233aa; border-color: #4466dd; color: #eef; }
+  .btn.primary:hover { background: #3344cc; }
+  .btn.danger { background: #661a1a; border-color: #993333; color: #fcc; }
+  .btn.danger:hover { background: #882222; }
+  .status-badge {
+    text-align: center; padding: 10px 14px; border-radius: 7px;
+    font-weight: 600; letter-spacing: 1px; font-size: 0.85rem;
+    transition: all 0.3s;
+  }
+  .status-editing { background: #1a2a4a; color: #88aadd; border: 1px solid #335588; }
+  .status-playing { background: #1a3a1a; color: #66dd88; border: 1px solid #338844; }
+  .status-paused  { background: #3a3a1a; color: #ddcc66; border: 1px solid #887733; }
+  .status-success { background: #1a3a2a; color: #44ff88; border: 1px solid #33aa55; }
+  .status-fail    { background: #3a1a1a; color: #ff6666; border: 1px solid #993333; }
+  .instructions {
+    font-size: 0.7rem; color: #6677aa; text-align: center; line-height: 1.5;
+    border-top: 1px solid #2a2a4a; padding-top: 8px; margin-top: 4px;
+  }
+  @media (max-width: 1080px) {
+    .main-container { flex-direction: column; align-items: center; }
+    .panel { max-width: 100%; width: 100%; }
+    canvas { width: 100% !important; height: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="main-container">
+  <div class="canvas-wrapper">
+    <canvas id="c" width="1000" height="620"></canvas>
+  </div>
+
+  <div class="panel" id="panel">
+    <h2>GRAVITY SLINGSHOT</h2>
+
+    <div class="control-group">
+      <label>Mass <span style="color:#ffaa44;">&#9679;</span></label>
+      <div class="row">
+        <input type="range" id="massSlider" min="1" max="300" value="50" step="1">
+        <input type="number" id="massInput" min="1" max="300" value="50">
+        <span class="value-display" id="massDisplay">50</span>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label>Initial Speed <span style="color:#66ccff;">&#9679;</span></label>
+      <div class="row">
+        <input type="range" id="speedSlider" min="30" max="350" value="150" step="1">
+        <input type="number" id="speedInput" min="30" max="350" value="150">
+        <span class="value-display" id="speedDisplay">150 px/s</span>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label>Launch Angle <span style="color:#cc88ff;">&#9679;</span></label>
+      <div class="row">
+        <input type="range" id="angleSlider" min="-90" max="90" value="0" step="1">
+        <input type="number" id="angleInput" min="-90" max="90" value="0">
+        <span class="value-display" id="angleDisplay">0°</span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn primary" id="btnPlay">▶ Play</button>
+      <button class="btn" id="btnReset">↺ Reset</button>
+      <button class="btn danger" id="btnClear">✕ Clear</button>
+    </div>
+
+    <div class="status-badge status-editing" id="statusBadge">EDITING</div>
+    <div class="instructions" id="instructions">
+      Click canvas to place body &bull; Drag bodies to move<br>
+      Right-click body to delete &bull; Space = Play/Pause<br>
+      <strong>New:</strong> Drag arrow handle to set launch<br>
+      Scroll over selected body to change mass
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // ============ CONSTANTS ============
+  const W = 1000, H = 620;
+  const DPR = window.devicePixelRatio || 1;
+  const START = { x: 100, y: 310 };
+  const TARGET = { x: 880, y: 310 };
+  const TARGET_RADIUS = 17;
+  const G_CONST = 1800;
+  const SOFTENING = 8;
+  const SUBSTEPS = 8;
+  const MAX_SIM_TIME = 35;
+  const GRID_SPACE = 40;
+  const MAX_FIELD_ARROW = 34;
+  const MAX_VISUAL_ARROW = 180;
+  const MIN_SPEED = 30, MAX_SPEED = 350;
+  const MIN_MASS = 1, MAX_MASS = 300;
+  const MIN_ANGLE = -90, MAX_ANGLE = 90;
+
+  // ============ DOM REFS ============
+  const canvas = document.getElementById('c');
+  // HiDPI setup: actual canvas pixels = logical * DPR, CSS styled to logical size
+  canvas.width = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+  const massSlider = document.getElementById('massSlider');
+  const massInput = document.getElementById('massInput');
+  const massDisplay = document.getElementById('massDisplay');
+  const speedSlider = document.getElementById('speedSlider');
+  const speedInput = document.getElementById('speedInput');
+  const speedDisplay = document.getElementById('speedDisplay');
+  const angleSlider = document.getElementById('angleSlider');
+  const angleInput = document.getElementById('angleInput');
+  const angleDisplay = document.getElementById('angleDisplay');
+  const btnPlay = document.getElementById('btnPlay');
+  const btnReset = document.getElementById('btnReset');
+  const btnClear = document.getElementById('btnClear');
+  const statusBadge = document.getElementById('statusBadge');
+
+  // ============ STATE ============
+  let mode = 'editing'; // editing | playing | paused | success | fail
+  let bodies = [];
+  let selectedIdx = -1;
+  let mass = 50;
+  let speed = 150;
+  let angleDeg = 0; // degrees
+  let asteroid = null; // {x, y, vx, vy, trail:[]}
+  let simTime = 0;
+  let fieldDirty = true;
+  let simStartTime = 0;
+  let predictionPath = [];
+  let predictionDirty = true;
+
+  // Drag state
+  let drag = null;
+  // { type: 'body'|'velocity', idx?: number,
+  //   startX, startY, origBodyX, origBodyY, origSpeed, origAngle }
+
+  // Offscreen canvas for gravitational field
+  const fieldCanvas = document.createElement('canvas');
+  fieldCanvas.width = W * DPR;
+  fieldCanvas.height = H * DPR;
+  const fieldCtx = fieldCanvas.getContext('2d');
+  fieldCtx.scale(DPR, DPR);
+
+  // Stars for background
+  const stars = [];
+  for (let i = 0; i < 250; i++) {
+    stars.push({
+      x: Math.random() * W, y: Math.random() * H,
+      r: Math.random() * 1.5 + 0.3,
+      b: Math.random() * 0.5 + 0.5
+    });
+  }
+
+  // ============ UTILITY ============
+  function dist2(a, b) { const dx = a.x - b.x, dy = a.y - b.y; return dx*dx + dy*dy; }
+  function dist(a, b) { return Math.sqrt(dist2(a, b)); }
+  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+  function degToRad(d) { return d * Math.PI / 180; }
+  function radToDeg(r) { return r * 180 / Math.PI; }
+
+  function bodyRadius(m) { return 8 + Math.sqrt(m) * 2.2; }
+
+  function getVelocityHandle() {
+    const aRad = degToRad(angleDeg);
+    const len = (speed / MAX_SPEED) * MAX_VISUAL_ARROW;
+    return {
+      x: START.x + Math.cos(aRad) * len,
+      y: START.y - Math.sin(aRad) * len
+    };
+  }
+
+  function canPlaceBody(x, y, m, excludeIdx) {
+    const r = bodyRadius(m);
+    // Check start proximity
+    if (dist({x,y}, START) < r + 18) return false;
+    // Check target proximity
+    if (dist({x,y}, TARGET) < r + TARGET_RADIUS + 12) return false;
+    // Check other bodies
+    for (let i = 0; i < bodies.length; i++) {
+      if (i === excludeIdx) continue;
+      const b = bodies[i];
+      if (dist({x,y}, b) < r + b.radius + 10) return false;
+    }
+    // Check canvas bounds
+    if (x - r < 0 || x + r > W || y - r < 0 || y + r > H) return false;
+    return true;
+  }
+
+  // ============ GRAVITATIONAL FIELD ============
+  function computeFieldAt(px, py) {
+    let ax = 0, ay = 0;
+    for (const b of bodies) {
+      const dx = b.x - px, dy = b.y - py;
+      const d2 = dx*dx + dy*dy;
+      const mag = G_CONST * b.mass / (d2 + SOFTENING*SOFTENING);
+      const d = Math.sqrt(d2);
+      if (d < 0.001) continue;
+      ax += mag * dx / d;
+      ay += mag * dy / d;
+    }
+    return { ax, ay, mag: Math.sqrt(ax*ax + ay*ay) };
+  }
+
+  function renderFieldCache() {
+    fieldCtx.clearRect(0, 0, W, H);
+    if (bodies.length === 0) { fieldDirty = false; return; }
+
+    // Compute all grid accelerations
+    const grid = [];
+    let maxMag = 0;
+    for (let x = GRID_SPACE / 2; x < W; x += GRID_SPACE) {
+      for (let y = GRID_SPACE / 2; y < H; y += GRID_SPACE) {
+        const f = computeFieldAt(x, y);
+        grid.push({x, y, ...f});
+        if (f.mag > maxMag) maxMag = f.mag;
+      }
+    }
+    if (maxMag < 0.01) { fieldDirty = false; return; }
+
+    // Absolute sqrt scaling: arrow length grows with mass without saturating.
+    // len = min(sqrt(mag) * scale, cap). Larger masses → wider visible field.
+    const ABS_SCALE = 3.5;
+    const LEN_CAP = 38;
+    for (const g of grid) {
+      const absLen = Math.sqrt(g.mag) * ABS_SCALE;
+      const len = Math.min(absLen, LEN_CAP);
+      const alpha = clamp(Math.sqrt(g.mag) / 14, 0.08, 0.7);
+      if (len < 1.0) continue;
+      const nx = g.ax / g.mag, ny = g.ay / g.mag;
+      const endX = g.x + nx * len, endY = g.y + ny * len;
+
+      // Subtle grid dot at sample point
+      fieldCtx.fillStyle = `rgba(150,160,190,${alpha * 0.55})`;
+      fieldCtx.beginPath();
+      fieldCtx.arc(g.x, g.y, 1.2, 0, Math.PI * 2);
+      fieldCtx.fill();
+
+      // Arrow shaft
+      fieldCtx.strokeStyle = `rgba(170,185,215,${alpha})`;
+      fieldCtx.lineWidth = Math.min(len / 7, 2.6);
+      fieldCtx.beginPath();
+      fieldCtx.moveTo(g.x, g.y);
+      fieldCtx.lineTo(endX, endY);
+      fieldCtx.stroke();
+
+      // Arrowhead
+      const headLen = clamp(len * 0.4, 3.5, 9);
+      const ang = Math.atan2(ny, nx);
+      fieldCtx.fillStyle = `rgba(170,185,215,${Math.min(alpha + 0.08, 0.75)})`;
+      fieldCtx.beginPath();
+      fieldCtx.moveTo(endX, endY);
+      fieldCtx.lineTo(
+        endX - headLen * Math.cos(ang - 0.55),
+        endY - headLen * Math.sin(ang - 0.55)
+      );
+      fieldCtx.lineTo(
+        endX - headLen * Math.cos(ang + 0.55),
+        endY - headLen * Math.sin(ang + 0.55)
+      );
+      fieldCtx.closePath();
+      fieldCtx.fill();
+    }
+    fieldDirty = false;
+  }
+
+  // ============ RENDER ============
+  function drawStars() {
+    for (const s of stars) {
+      ctx.fillStyle = `rgba(200,210,255,${s.b})`;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function drawBody(b, isSelected) {
+    const { x, y, radius: r } = b;
+    // Glow
+    const glowGrad = ctx.createRadialGradient(x, y, r*0.5, x, y, r*1.7);
+    glowGrad.addColorStop(0, 'rgba(255,180,60,0.35)');
+    glowGrad.addColorStop(0.5, 'rgba(255,140,30,0.12)');
+    glowGrad.addColorStop(1, 'rgba(255,100,20,0)');
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath(); ctx.arc(x, y, r*1.7, 0, Math.PI*2); ctx.fill();
+
+    // Body gradient
+    const grad = ctx.createRadialGradient(x - r*0.25, y - r*0.3, r*0.1, x, y, r);
+    grad.addColorStop(0, '#ffcc66');
+    grad.addColorStop(0.45, '#ff9930');
+    grad.addColorStop(0.8, '#cc5500');
+    grad.addColorStop(1, '#883300');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+
+    // Rim light
+    ctx.strokeStyle = 'rgba(255,220,150,0.4)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.stroke();
+
+    // Selection ring
+    if (isSelected) {
+      const t = Date.now() / 1000;
+      const pulseAlpha = 0.55 + Math.sin(t * 3) * 0.3;
+      ctx.strokeStyle = `rgba(255,255,200,${pulseAlpha})`;
+      ctx.lineWidth = 2.8;
+      ctx.setLineDash([6, 3]);
+      ctx.lineDashOffset = t * 40;
+      ctx.beginPath(); ctx.arc(x, y, r + 6, 0, Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1;
+    }
+  }
+
+  function drawTarget() {
+    const { x, y } = TARGET;
+    const t = Date.now() / 1000;
+
+    // Outer glow
+    const glowGrad = ctx.createRadialGradient(x, y, TARGET_RADIUS*0.6, x, y, TARGET_RADIUS*2);
+    glowGrad.addColorStop(0, 'rgba(80,255,120,0.3)');
+    glowGrad.addColorStop(1, 'rgba(80,255,120,0)');
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath(); ctx.arc(x, y, TARGET_RADIUS*2, 0, Math.PI*2); ctx.fill();
+
+    // Rotating dashed ring
+    ctx.strokeStyle = 'rgba(100,255,150,0.7)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 5]);
+    ctx.lineDashOffset = t * 60;
+    ctx.beginPath(); ctx.arc(x, y, TARGET_RADIUS + 5, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineWidth = 1;
+
+    // Crosshair
+    const cl = TARGET_RADIUS + 9;
+    ctx.strokeStyle = 'rgba(100,255,150,0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x - cl, y); ctx.lineTo(x + cl, y);
+    ctx.moveTo(x, y - cl); ctx.lineTo(x, y + cl);
+    ctx.stroke();
+
+    // Inner circle
+    const innerGrad = ctx.createRadialGradient(x, y, 2, x, y, TARGET_RADIUS);
+    innerGrad.addColorStop(0, '#44ff88');
+    innerGrad.addColorStop(1, '#228844');
+    ctx.fillStyle = innerGrad;
+    ctx.beginPath(); ctx.arc(x, y, TARGET_RADIUS, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(150,255,180,0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(x, y, TARGET_RADIUS, 0, Math.PI*2); ctx.stroke();
+
+    // Label
+    ctx.fillStyle = '#aaffcc';
+    ctx.font = 'bold 12px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u{1F3AF} Target', x, y + TARGET_RADIUS + 20);
+  }
+
+  function drawStart() {
+    const { x, y } = START;
+
+    // Blue glow
+    const glowGrad = ctx.createRadialGradient(x, y, 3, x, y, 18);
+    glowGrad.addColorStop(0, 'rgba(80,150,255,0.5)');
+    glowGrad.addColorStop(1, 'rgba(80,150,255,0)');
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI*2); ctx.fill();
+
+    // Blue dot
+    const dotGrad = ctx.createRadialGradient(x, y, 1, x, y, 7);
+    dotGrad.addColorStop(0, '#ffffff');
+    dotGrad.addColorStop(0.4, '#66aaff');
+    dotGrad.addColorStop(1, '#2255cc');
+    ctx.fillStyle = dotGrad;
+    ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(150,200,255,0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI*2); ctx.stroke();
+
+    // Label
+    ctx.fillStyle = '#aaccff';
+    ctx.font = 'bold 12px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u{1F680} Start', x, y + 22);
+  }
+
+  function drawVelocityPreview() {
+    if (mode !== 'editing') return;
+    const { x: sx, y: sy } = START;
+    const h = getVelocityHandle();
+
+    // Dashed arrow line
+    ctx.strokeStyle = 'rgba(150,200,255,0.7)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 5]);
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(h.x, h.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineWidth = 1;
+
+    // Arrowhead at handle
+    const aRad = degToRad(angleDeg);
+    const headLen = 10;
+    ctx.fillStyle = 'rgba(150,200,255,0.8)';
+    ctx.beginPath();
+    ctx.moveTo(h.x, h.y);
+    ctx.lineTo(
+      h.x - headLen * Math.cos(aRad - 0.45),
+      h.y + headLen * Math.sin(aRad - 0.45)
+    );
+    ctx.lineTo(
+      h.x - headLen * Math.cos(aRad + 0.45),
+      h.y + headLen * Math.sin(aRad + 0.45)
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Handle circle
+    const pulse = Math.sin(Date.now() / 1000 * 2) * 0.15 + 0.75;
+    ctx.fillStyle = `rgba(200,230,255,${pulse})`;
+    ctx.beginPath(); ctx.arc(h.x, h.y, 7, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(h.x, h.y, 7, 0, Math.PI*2); ctx.stroke();
+    ctx.lineWidth = 1;
+  }
+
+  function drawAsteroid() {
+    if (!asteroid) return;
+
+    // Trail as grey gradient dots — only the most recent portion
+    const trail = asteroid.trail;
+    const maxDots = 180;
+    const startIdx = Math.max(0, trail.length - maxDots);
+    const stride = Math.max(1, Math.floor((trail.length - startIdx) / 120));
+
+    for (let i = startIdx; i < trail.length; i += stride) {
+      const t = (i - startIdx) / (trail.length - startIdx); // 0=tail, 1=head
+      const alpha = Math.pow(t, 1.5) * 0.85;
+      const r = 1.0 + t * 1.4;
+      ctx.fillStyle = `rgba(185,190,210,${alpha})`;
+      ctx.beginPath();
+      ctx.arc(trail[i].x, trail[i].y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Asteroid dot
+    const agrad = ctx.createRadialGradient(asteroid.x, asteroid.y, 0, asteroid.x, asteroid.y, 4);
+    agrad.addColorStop(0, '#ffffff');
+    agrad.addColorStop(0.5, '#ddddee');
+    agrad.addColorStop(1, 'rgba(180,180,200,0)');
+    ctx.fillStyle = agrad;
+    ctx.beginPath(); ctx.arc(asteroid.x, asteroid.y, 4, 0, Math.PI*2); ctx.fill();
+
+    // Small bright core
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(asteroid.x, asteroid.y, 1.5, 0, Math.PI*2); ctx.fill();
+  }
+
+  function drawPrediction() {
+    if (predictionPath.length === 0) return;
+    // Only show the first portion so the player can't see the destination.
+    // Fades from clear (near spaceship) to invisible (well before the end).
+    const visibleRatio = 0.62;
+    const endIdx = Math.max(2, Math.floor(predictionPath.length * visibleRatio));
+    const stride = Math.max(1, Math.floor(endIdx / 80));
+
+    for (let i = 0; i < endIdx; i += stride) {
+      const t = 1 - (i / endIdx); // 1=near ship, 0=cutoff point
+      const alpha = t * 0.72;
+      const r = 1.0 + t * 1.5;
+      ctx.fillStyle = `rgba(155,165,200,${alpha})`;
+      ctx.beginPath();
+      ctx.arc(predictionPath[i].x, predictionPath[i].y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Space background
+    ctx.fillStyle = '#080818';
+    ctx.fillRect(0, 0, W, H);
+    drawStars();
+
+    // Gravitational field (cached)
+    if (fieldDirty) renderFieldCache();
+    // Explicit dest size needed: fieldCanvas has W*DPR physical pixels,
+    // but main ctx is scaled by DPR, so image natural size would overflow.
+    ctx.drawImage(fieldCanvas, 0, 0, W, H);
+
+    // Target
+    drawTarget();
+
+    // Start point
+    drawStart();
+
+    // Celestial bodies
+    for (let i = 0; i < bodies.length; i++) {
+      drawBody(bodies[i], i === selectedIdx);
+    }
+
+    // Velocity preview arrow
+    drawVelocityPreview();
+
+    // Trajectory prediction (computed in editing, frozen during play)
+    if (predictionDirty && mode === 'editing') computePrediction();
+    drawPrediction();
+
+    // Asteroid and trail
+    drawAsteroid();
+  }
+
+  // ============ PHYSICS ============
+  function computeAccel(px, py) {
+    let ax = 0, ay = 0;
+    for (const b of bodies) {
+      const dx = b.x - px, dy = b.y - py;
+      const d2 = dx*dx + dy*dy;
+      const mag = G_CONST * b.mass / (d2 + SOFTENING*SOFTENING);
+      const d = Math.sqrt(d2);
+      if (d < 0.001) continue;
+      ax += mag * dx / d;
+      ay += mag * dy / d;
+    }
+    return { ax, ay };
+  }
+
+  function checkCollision(px, py) {
+    // Target?
+    if (dist({x:px,y:py}, TARGET) < TARGET_RADIUS) return 'success';
+    // Bodies?
+    for (const b of bodies) {
+      if (dist({x:px,y:py}, b) < b.radius) return 'fail_body';
+    }
+    // Off screen?
+    if (px < -20 || px > W + 20 || py < -20 || py > H + 20) return 'fail_bounds';
+    return null;
+  }
+
+  function stepPhysics(dt) {
+    if (!asteroid || mode !== 'playing') return null;
+    const subDt = dt / SUBSTEPS;
+    for (let s = 0; s < SUBSTEPS; s++) {
+      const { ax, ay } = computeAccel(asteroid.x, asteroid.y);
+      asteroid.vx += ax * subDt;
+      asteroid.vy += ay * subDt;
+      asteroid.x += asteroid.vx * subDt;
+      asteroid.y += asteroid.vy * subDt;
+    }
+    asteroid.trail.push({ x: asteroid.x, y: asteroid.y });
+    if (asteroid.trail.length > 300) asteroid.trail.shift();
+
+    simTime += dt;
+    if (simTime > MAX_SIM_TIME) return 'fail_timeout';
+    return checkCollision(asteroid.x, asteroid.y);
+  }
+
+  function computePrediction() {
+    predictionPath = [];
+    if (bodies.length === 0) {
+      // Straight-line prediction when no bodies
+      const aRad = degToRad(angleDeg);
+      const vx = Math.cos(aRad) * speed;
+      const vy = -Math.sin(aRad) * speed;
+      let px = START.x, py = START.y;
+      const steps = 150;
+      const dt = 0.04;
+      for (let i = 0; i < steps; i++) {
+        px += vx * dt;
+        py += vy * dt;
+        if (px < -20 || px > W + 20 || py < -20 || py > H + 20) break;
+        if (dist({x:px, y:py}, TARGET) < TARGET_RADIUS) { predictionPath.push({x:px, y:py}); break; }
+        predictionPath.push({x: px, y: py});
+      }
+    } else {
+      const aRad = degToRad(angleDeg);
+      let vx = Math.cos(aRad) * speed;
+      let vy = -Math.sin(aRad) * speed;
+      let px = START.x, py = START.y;
+      const maxSteps = 240;
+      const dt = 1 / 25;
+      const subSteps = 4;
+      const subDt = dt / subSteps;
+      for (let i = 0; i < maxSteps; i++) {
+        for (let s = 0; s < subSteps; s++) {
+          const { ax, ay } = computeAccel(px, py);
+          vx += ax * subDt;
+          vy += ay * subDt;
+          px += vx * subDt;
+          py += vy * subDt;
+        }
+        if (px < -20 || px > W + 20 || py < -20 || py > H + 20) break;
+        let hitBody = false;
+        for (const b of bodies) {
+          if (dist({x:px, y:py}, b) < b.radius) { hitBody = true; break; }
+        }
+        if (hitBody) break;
+        predictionPath.push({x: px, y: py});
+        if (dist({x:px, y:py}, TARGET) < TARGET_RADIUS) break;
+      }
+    }
+    predictionDirty = false;
+  }
+
+  // ============ PANEL SYNC ============
+  function syncMassToPanel() {
+    massSlider.value = mass;
+    massInput.value = mass;
+    massDisplay.textContent = mass;
+  }
+
+  function syncSpeedToPanel() {
+    speedSlider.value = speed;
+    speedInput.value = speed;
+    speedDisplay.textContent = speed + ' px/s';
+  }
+
+  function syncAngleToPanel() {
+    angleSlider.value = angleDeg;
+    angleInput.value = angleDeg;
+    angleDisplay.textContent = angleDeg + '°';
+  }
+
+  function syncAllToPanel() {
+    syncMassToPanel();
+    syncSpeedToPanel();
+    syncAngleToPanel();
+  }
+
+  function setMode(newMode) {
+    mode = newMode;
+    statusBadge.className = 'status-badge';
+    switch (mode) {
+      case 'editing': statusBadge.classList.add('status-editing'); statusBadge.textContent = 'EDITING'; break;
+      case 'playing': statusBadge.classList.add('status-playing'); statusBadge.textContent = 'PLAYING'; break;
+      case 'paused':  statusBadge.classList.add('status-paused');  statusBadge.textContent = 'PAUSED';  break;
+      case 'success': statusBadge.classList.add('status-success'); statusBadge.textContent = 'SUCCESS \u{1F3AF}'; break;
+      case 'fail':    statusBadge.classList.add('status-fail');    statusBadge.textContent = 'FAIL';     break;
+    }
+    btnPlay.textContent = (mode === 'playing') ? '⏸ Pause' : '▶ Play';
+  }
+
+  // ============ ACTIONS ============
+  function launchAsteroid() {
+    const aRad = degToRad(angleDeg);
+    const vx = Math.cos(aRad) * speed;
+    const vy = -Math.sin(aRad) * speed;
+    asteroid = {
+      x: START.x, y: START.y,
+      vx: vx, vy: vy,
+      trail: [{ x: START.x, y: START.y }]
+    };
+    simTime = 0;
+    simStartTime = performance.now();
+  }
+
+  function doPlay() {
+    if (mode === 'editing' || mode === 'success' || mode === 'fail') {
+      computePrediction(); // freeze latest prediction at launch moment
+      if (!asteroid || mode === 'success' || mode === 'fail') launchAsteroid();
+      setMode('playing');
+    } else if (mode === 'playing') {
+      setMode('paused');
+    } else if (mode === 'paused') {
+      setMode('playing');
+    }
+  }
+
+  function doReset() {
+    asteroid = null;
+    simTime = 0;
+    setMode('editing');
+  }
+
+  function doClear() {
+    bodies = [];
+    selectedIdx = -1;
+    asteroid = null;
+    simTime = 0;
+    fieldDirty = true; predictionDirty = true;
+    setMode('editing');
+    syncMassToPanel();
+  }
+
+  function deleteSelectedBody() {
+    if (selectedIdx < 0 || selectedIdx >= bodies.length) return;
+    bodies.splice(selectedIdx, 1);
+    selectedIdx = -1;
+    fieldDirty = true; predictionDirty = true;
+    syncMassToPanel();
+  }
+
+  function updateSelectedMass(newMass) {
+    if (selectedIdx < 0 || selectedIdx >= bodies.length) return;
+    newMass = clamp(Math.round(newMass), MIN_MASS, MAX_MASS);
+    bodies[selectedIdx].mass = newMass;
+    bodies[selectedIdx].radius = bodyRadius(newMass);
+    mass = newMass;
+    fieldDirty = true; predictionDirty = true;
+    syncMassToPanel();
+  }
+
+  // ============ EVENT HANDLERS ============
+  function getCanvasPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  function findBodyAt(px, py) {
+    for (let i = bodies.length - 1; i >= 0; i--) {
+      if (dist({x:px,y:py}, bodies[i]) < bodies[i].radius + 4) return i;
+    }
+    return -1;
+  }
+
+  function isNearHandle(px, py) {
+    const h = getVelocityHandle();
+    return dist({x:px, y:py}, h) < 12;
+  }
+
+  function isNearStart(px, py) {
+    return dist({x:px, y:py}, START) < 22;
+  }
+
+  function updateVelocityFromHandle(px, py) {
+    let dx = px - START.x;
+    let dy = py - START.y;
+    // Clamp to right half-plane
+    if (dx < 0) dx = 0;
+    const d = Math.sqrt(dx*dx + dy*dy);
+    const newSpeed = clamp((d / MAX_VISUAL_ARROW) * MAX_SPEED, MIN_SPEED, MAX_SPEED);
+    let newAngle = radToDeg(Math.atan2(-dy, Math.max(dx, 0.001)));
+    newAngle = clamp(newAngle, MIN_ANGLE, MAX_ANGLE);
+    speed = Math.round(newSpeed);
+    angleDeg = Math.round(newAngle);
+    syncSpeedToPanel();
+    syncAngleToPanel();
+    predictionDirty = true;
+  }
+
+  // Mouse events
+  canvas.addEventListener('mousedown', function(e) {
+    if (e.button !== 0) return; // only left click
+    const pos = getCanvasPos(e);
+
+    // Check if clicking on velocity handle (editing mode)
+    if (mode === 'editing' && isNearHandle(pos.x, pos.y)) {
+      drag = { type: 'velocity', origSpeed: speed, origAngle: angleDeg };
+      updateVelocityFromHandle(pos.x, pos.y);
+      e.preventDefault();
+      return;
+    }
+
+    // Check if clicking near start to initiate velocity drag (nice-to-have)
+    if (mode === 'editing' && isNearStart(pos.x, pos.y)) {
+      drag = { type: 'velocity', origSpeed: speed, origAngle: angleDeg };
+      updateVelocityFromHandle(pos.x, pos.y);
+      e.preventDefault();
+      return;
+    }
+
+    // Check if clicking on a body
+    const idx = findBodyAt(pos.x, pos.y);
+    if (idx >= 0) {
+      if (mode === 'editing') {
+        selectedIdx = idx;
+        mass = bodies[idx].mass;
+        syncMassToPanel();
+        drag = { type: 'body', idx: idx, origX: pos.x, origY: pos.y,
+                 origBodyX: bodies[idx].x, origBodyY: bodies[idx].y };
+      }
+      e.preventDefault();
+      return;
+    }
+
+    // Prepare to place a new body (editing mode, on empty space)
+    if (mode === 'editing') {
+      drag = { type: 'place', startX: pos.x, startY: pos.y };
+      e.preventDefault();
+    }
+  });
+
+  canvas.addEventListener('mousemove', function(e) {
+    const pos = getCanvasPos(e);
+
+    if (drag && drag.type === 'velocity') {
+      updateVelocityFromHandle(pos.x, pos.y);
+      return;
+    }
+
+    if (drag && drag.type === 'body') {
+      const idx = drag.idx;
+      const dx = pos.x - drag.origX;
+      const dy = pos.y - drag.origY;
+      let nx = drag.origBodyX + dx;
+      let ny = drag.origBodyY + dy;
+      // Clamp to canvas
+      const r = bodies[idx].radius;
+      nx = clamp(nx, r, W - r);
+      ny = clamp(ny, r, H - r);
+      // Check collisions with start/target/other bodies
+      const m = bodies[idx].mass;
+      let ok = true;
+      if (dist({x:nx,y:ny}, START) < r + 18) ok = false;
+      if (dist({x:nx,y:ny}, TARGET) < r + TARGET_RADIUS + 12) ok = false;
+      for (let i = 0; i < bodies.length; i++) {
+        if (i === idx) continue;
+        if (dist({x:nx,y:ny}, bodies[i]) < r + bodies[i].radius + 10) { ok = false; break; }
+      }
+      if (ok) {
+        bodies[idx].x = nx;
+        bodies[idx].y = ny;
+        fieldDirty = true; predictionDirty = true;
+      }
+      return;
+    }
+
+    // Cursor updates
+    if (mode === 'editing') {
+      if (isNearHandle(pos.x, pos.y) || (drag && drag.type === 'velocity')) {
+        canvas.style.cursor = 'grab';
+      } else if (findBodyAt(pos.x, pos.y) >= 0) {
+        canvas.style.cursor = 'pointer';
+      } else {
+        canvas.style.cursor = 'crosshair';
+      }
+    } else {
+      canvas.style.cursor = 'default';
+    }
+  });
+
+  canvas.addEventListener('mouseup', function(e) {
+    if (!drag) return;
+
+    if (drag.type === 'place') {
+      const pos = getCanvasPos(e);
+      const dx = pos.x - drag.startX;
+      const dy = pos.y - drag.startY;
+      // Only place if mouse didn't move much (click, not drag)
+      if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
+        if (canPlaceBody(pos.x, pos.y, mass, -1)) {
+          const newBody = {
+            x: pos.x, y: pos.y,
+            mass: mass,
+            radius: bodyRadius(mass)
+          };
+          bodies.push(newBody);
+          selectedIdx = bodies.length - 1;
+          fieldDirty = true; predictionDirty = true;
+          syncMassToPanel();
+        } else {
+          // Deselect if clicking empty but unplaceable space
+          selectedIdx = -1;
+          syncMassToPanel();
+        }
+      }
+    }
+
+    drag = null;
+    canvas.style.cursor = 'crosshair';
+  });
+
+  canvas.addEventListener('mouseleave', function() {
+    drag = null;
+    canvas.style.cursor = 'crosshair';
+  });
+
+  // Right click to delete body
+  canvas.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    if (mode !== 'editing') return;
+    const pos = getCanvasPos(e);
+    const idx = findBodyAt(pos.x, pos.y);
+    if (idx >= 0) {
+      bodies.splice(idx, 1);
+      if (selectedIdx === idx) {
+        selectedIdx = -1;
+        syncMassToPanel();
+      } else if (selectedIdx > idx) {
+        selectedIdx--;
+      }
+      fieldDirty = true; predictionDirty = true;
+    }
+  });
+
+  // Scroll to adjust selected body mass
+  canvas.addEventListener('wheel', function(e) {
+    if (mode !== 'editing') return;
+    if (selectedIdx < 0 || selectedIdx >= bodies.length) return;
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 5 : -5;
+    updateSelectedMass(bodies[selectedIdx].mass + delta);
+  }, { passive: false });
+
+  // Touch events
+  canvas.addEventListener('touchstart', function(e) {
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    const pos = getCanvasPos(touch);
+
+    if (mode !== 'editing') return;
+
+    const idx = findBodyAt(pos.x, pos.y);
+    if (idx >= 0) {
+      selectedIdx = idx;
+      mass = bodies[idx].mass;
+      syncMassToPanel();
+      drag = { type: 'body', idx: idx, origX: pos.x, origY: pos.y,
+               origBodyX: bodies[idx].x, origBodyY: bodies[idx].y };
+      e.preventDefault();
+      return;
+    }
+
+    drag = { type: 'place', startX: pos.x, startY: pos.y };
+    e.preventDefault();
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', function(e) {
+    if (!drag || drag.type !== 'body') return;
+    e.preventDefault();
+    const pos = getCanvasPos(e.touches[0]);
+    const idx = drag.idx;
+    const dx = pos.x - drag.origX;
+    const dy = pos.y - drag.origY;
+    let nx = drag.origBodyX + dx;
+    let ny = drag.origBodyY + dy;
+    const r = bodies[idx].radius;
+    nx = clamp(nx, r, W - r);
+    ny = clamp(ny, r, H - r);
+    let ok = true;
+    if (dist({x:nx,y:ny}, START) < r + 18) ok = false;
+    if (dist({x:nx,y:ny}, TARGET) < r + TARGET_RADIUS + 12) ok = false;
+    for (let i = 0; i < bodies.length; i++) {
+      if (i === idx) continue;
+      if (dist({x:nx,y:ny}, bodies[i]) < r + bodies[i].radius + 10) { ok = false; break; }
+    }
+    if (ok) {
+      bodies[idx].x = nx;
+      bodies[idx].y = ny;
+      fieldDirty = true; predictionDirty = true;
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', function(e) {
+    if (!drag) return;
+    if (drag.type === 'place') {
+      const pos = getCanvasPos(e.changedTouches[0]);
+      const dx = pos.x - drag.startX;
+      const dy = pos.y - drag.startY;
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) {
+        if (canPlaceBody(pos.x, pos.y, mass, -1)) {
+          const newBody = {
+            x: pos.x, y: pos.y,
+            mass: mass,
+            radius: bodyRadius(mass)
+          };
+          bodies.push(newBody);
+          selectedIdx = bodies.length - 1;
+          fieldDirty = true; predictionDirty = true;
+          syncMassToPanel();
+        }
+      }
+    }
+    drag = null;
+  });
+
+  // Keyboard
+  window.addEventListener('keydown', function(e) {
+    // Don't handle if an input is focused
+    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+      return;
+    }
+
+    if (e.code === 'Space') {
+      e.preventDefault();
+      doPlay();
+    } else if (e.code === 'KeyR') {
+      e.preventDefault();
+      doReset();
+    } else if (e.code === 'Delete' || e.code === 'Backspace') {
+      e.preventDefault();
+      if (mode === 'editing' && selectedIdx >= 0) {
+        deleteSelectedBody();
+      }
+    }
+  });
+
+  // Panel sliders & inputs
+  massSlider.addEventListener('input', function() {
+    mass = parseInt(this.value);
+    syncMassToPanel();
+    if (selectedIdx >= 0 && selectedIdx < bodies.length) {
+      bodies[selectedIdx].mass = mass;
+      bodies[selectedIdx].radius = bodyRadius(mass);
+      fieldDirty = true; predictionDirty = true;
+    }
+  });
+
+  massInput.addEventListener('input', function() {
+    let v = parseInt(this.value);
+    if (isNaN(v)) return;
+    v = clamp(v, MIN_MASS, MAX_MASS);
+    mass = v;
+    massSlider.value = v;
+    massDisplay.textContent = v;
+    if (selectedIdx >= 0 && selectedIdx < bodies.length) {
+      bodies[selectedIdx].mass = v;
+      bodies[selectedIdx].radius = bodyRadius(v);
+      fieldDirty = true; predictionDirty = true;
+    }
+  });
+
+  speedSlider.addEventListener('input', function() {
+    speed = parseInt(this.value);
+    syncSpeedToPanel();
+    predictionDirty = true;
+  });
+
+  speedInput.addEventListener('input', function() {
+    let v = parseInt(this.value);
+    if (isNaN(v)) return;
+    v = clamp(v, MIN_SPEED, MAX_SPEED);
+    speed = v;
+    speedSlider.value = v;
+    speedDisplay.textContent = v + ' px/s';
+    predictionDirty = true;
+  });
+
+  angleSlider.addEventListener('input', function() {
+    angleDeg = parseInt(this.value);
+    syncAngleToPanel();
+    predictionDirty = true;
+  });
+
+  angleInput.addEventListener('input', function() {
+    let v = parseInt(this.value);
+    if (isNaN(v)) return;
+    v = clamp(v, MIN_ANGLE, MAX_ANGLE);
+    angleDeg = v;
+    angleSlider.value = v;
+    angleDisplay.textContent = v + '°';
+    predictionDirty = true;
+  });
+
+  // Buttons
+  btnPlay.addEventListener('click', doPlay);
+  btnReset.addEventListener('click', doReset);
+  btnClear.addEventListener('click', doClear);
+
+  // ============ ANIMATION LOOP ============
+  let lastTime = performance.now();
+
+  function loop(timestamp) {
+    let dt = (timestamp - lastTime) / 1000;
+    if (dt <= 0) dt = 0.016;
+    if (dt > 0.1) dt = 0.1; // cap to avoid spiral of death
+    lastTime = timestamp;
+
+    const result = stepPhysics(dt);
+    if (result) {
+      if (result === 'success') {
+        setMode('success');
+      } else {
+        setMode('fail');
+        if (result === 'fail_body') statusBadge.textContent = 'FAIL – Hit Body';
+        else if (result === 'fail_bounds') statusBadge.textContent = 'FAIL – Out of Bounds';
+        else if (result === 'fail_timeout') statusBadge.textContent = 'FAIL – Timeout';
+      }
+    }
+
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  // ============ INIT ============
+  syncAllToPanel();
+  setMode('editing');
+  renderFieldCache();
+  requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>
