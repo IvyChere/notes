@@ -17,7 +17,7 @@ Tip: 分析力学的往期内容戳[这里](https://blogs.starspress.org/tags/%E
 
 > 在铅直平面上两点A，B之间要连一条曲线，使得不受摩擦的质点在重力的作用下由静止开始沿这条曲线由A运动到B所需要的时间最少？
 
-我们不妨使用现代的数学方法来研究一下这个问题. 
+这个问题被称为最速降线问题. 我们不妨使用现代的数学方法来研究一下这个问题. 
 
 以质点的初始位置为原点，在平面中建立平面直角坐标系$xOy$，$x$轴以曲线延伸方向为正方向，$y$轴以竖直向下为正方向. 设运动起点、终点分别为$(0, 0), (x_0, y_0)$
 
@@ -68,7 +68,7 @@ $$
 我们有一个性质足够好的一元函数$y = y(x)$，它的极值点为$x = x_0$. 我们在它的极值点左右取一个很小的区间，并想象有一个质点从区间的一端移向另一端. 我们很容易想到，在极值点处，质点的速度完全与$x$轴平行，换言之，质点在极值点处的运动不会造成函数值$y$的增加. 用数学家的车轱辘话讲就是
 
 $$
-\left.\mathrm d y\right| _{x = x_0} = 0 \ 或者\ \left. \frac{\mathrm d y}{\mathrm d x} \right|_{x=x_0} = 0
+\left. \frac{\mathrm d y}{\mathrm d x} \right|_{x=x_0} = 0
 $$
 
 非常美妙的起点. 那我们能否讲这个方法用于泛函$S$上呢？能的兄弟能的：如果我对泛函$S$取一个微小的变化$\delta S$，再令$\delta S = 0$不就成了吗. 
@@ -86,7 +86,7 @@ $$
 \delta y = \tilde {y} - y
 $$
 
-为函数$y = y(x)$的**变分**，同样地可以定义泛函$S$的变分：
+为函数$y = y(x)$的**变分**，我们很容易得到变分运算时线性的. 同样地可以定义泛函$S$的变分：
 
 $$
 \delta S = S[y + \delta y] - S[y]
@@ -99,14 +99,140 @@ $$
 
 $$
 
-我们只需要让$\delta S = 0$即可！可喜可贺可口可乐......
+我们仿照函数的导数，设$\delta L = \dfrac{\delta S}{\delta y}\delta y$，我们称形式上的记号$\dfrac{\delta S}{\delta y}$为$S$的 **“泛函导数”**
 
-...等等，这$\delta S$到底是一泡啥玩意啊......
+这样我们只需要让$\dfrac{\delta S}{\delta y}$即可！可喜可贺可口可乐......
+
+...等等，这$\dfrac{\delta S}{\delta y}$到底是一泡啥玩意啊......
 
 当我们对这一坨数学玩意感到手足无措的时候，我们可以发挥一下我们物理学家的传统艺能——联想. （虽然数学家们会感到很生气，但是我们不去管他）
 
 对于一元函数，我们可以对它做泰勒展开. 哪对一个泛函凭什么就不行？说干就干.
 
+我们稍微“拨动”一下泛函$S$，得到$\tilde{S} = S[y + \epsilon\ \delta y]$，把它对$\epsilon \ \delta y$展开：
 
+$$
+S[y + \epsilon \ \delta y] = S[y] + \epsilon \ \delta S + \frac{1}{2!} \epsilon^2 \ \delta^2 S + \dots
+$$
+
+从另一方面，我们还可以把$\epsilon$视为一个变量，在$\epsilon = 0$处对它进行展开：
+
+$$
+S[y + \epsilon \ \delta y] = S[y] + \epsilon \left. \left( \frac{\mathrm d \tilde S}{\mathrm d \epsilon} \right) \right|_{\epsilon = 0} + \frac{1}{2!} \epsilon^2 \left. \left( \frac{\mathrm d^2 \tilde S}{\mathrm d \epsilon^2} \right) \right|_{\epsilon = 0} + \dots
+$$
+
+对比一下各项系数，巧了，我们可以得到：
+
+$$
+\delta S = \left. \left( \frac{\mathrm d \tilde S}{\mathrm d \epsilon} \right) \right|_{\epsilon = 0} =\int_{t_1}^{t_2} \left. \frac{\mathrm d}{\mathrm d \epsilon}L(x, y+\epsilon \delta y,y' + \epsilon \delta y', \dots )\right|_{\epsilon = 0} \mathrm d x = \int_{t_1}^{t_2}\mathrm d x \left( \frac{\partial L}{\partial y}\delta  y + \frac{\partial L}{\partial y'}\delta  y'+ \dots \right)
+$$
+
+所以我们就有
+
+$$
+\delta L = \frac{\partial L}{\partial y}\delta  y + \frac{\partial L}{\partial y'}\delta  y'+ \dots + \frac{\partial L}{\partial y^{(n)}}\mathrm d y^{(n)}
+$$
+
+由于$x$是一个变量，它的变分$\delta x = 0$（我们没办法对一个变量进行形式上的变化，对吧）. 因此，$L$的变分还可以写成以下的形式：
+
+$$
+\delta L = \frac{\partial L}{\partial x}\delta  x + \frac{\partial L}{\partial y}\delta  y + \frac{\partial L}{\partial y'}\delta  y'+ \dots + \frac{\partial L}{\partial y^{(n)}}\mathrm d y^{(n)}
+$$
+
+这和$L$的全微分$\mathrm d L = \dfrac{\partial L}{\partial x}\mathrm d  x + \dfrac{\partial L}{\partial y}\mathrm d  y + \dfrac{\partial L}{\partial y'}\mathrm d  y'+ \dots + \dfrac{\partial L}{\partial y^{(n)}}\mathrm d y^{(n)}$有着惊人的结构一致性. 这就给了我们一种计算泛函变分的方法.
+
+我们考虑一种简单的情形：对于泛函
+
+$$
+S = \int_{t_1}^{t_2}\mathrm dx \ L(x, y, y')
+$$
+
+其变分
+
+$$
+\delta S = \int_{t_1}^{t_2}\mathrm dx \left( \frac{\partial L}{\partial y}\delta  y + \frac{\partial L}{\partial y'}\delta  y' \right)
+$$
+
+而由下图可知：变分的导数等于导数的变分
+
+![](/images/Blog2.2.png)
+
+因此，第二项我们可以利用分部积分法写成
+
+$$
+\frac{\partial L}{\partial y'}\delta  y' = \frac{\partial L}{\partial y'} \frac{\mathrm d}{\mathrm dx}(\delta y) = \frac{\mathrm d}{\mathrm dx}\left( \frac{\partial L}{\partial y'}\delta y \right) - \frac{\mathrm d}{\mathrm dx} \left( \frac{\partial L}{\partial y'} \right)\delta y
+$$
+
+回代：
+
+$$
+\delta S = \int_{t_1}^{t_2}\mathrm dx \left( \frac{\partial L}{\partial y}\delta  y + \frac{\partial L}{\partial y'}\delta  y' \right) 
+$$
+
+$$
+=  \int_{t_1}^{t_2}\mathrm dx \left[ \frac{\mathrm d}{\mathrm dx}\left( \frac{\partial L}{\partial y'}\delta y \right) + \frac{\partial L}{\partial y}\delta  y - \frac{\mathrm d}{\mathrm dx} \left( \frac{\partial L}{\partial y'} \right)\delta y\right]
+$$
+
+$$
+= \left. \left( \frac{\partial L}{\partial y'}\delta y \right)\right|_{t_1}^{t_2} + \int_{t_1}^{t_2}\mathrm dx \left[ \frac{\partial L}{\partial y} - \frac{\mathrm d}{\mathrm dx} \left( \frac{\partial L}{\partial y'} \right)\right]\delta  y
+$$
+
+我们称$\left. \left( \dfrac{\partial L}{\partial y'}\delta y \right)\right|_{t_1}^{t_2}$为泛函$S$的**边界项**，称$\dfrac{\partial L}{\partial y'}\delta y$为被积函数的**全导数项**. 当泛函$S_1$与$S_2$仅相差边界项时，或者被积函数$L_1$与$L_2$仅相差全导数项时，我们记为$S_1 \simeq S_2, L_1 \simeq L_2$.
+
+继续.
+
+在最速降线问题中，积分上下限是确定的. 如果对于这样一个泛函，其积分限$t_1, t_2$确定，即$\delta t_1 = \delta t_2 = 0$. 那么S的边界项$\left. \left( \dfrac{\partial L}{\partial y'}\delta y \right)\right|_{t_1}^{t_2} = 0$. 此时
+
+$$
+\delta S = \int_{t_1}^{t_2}\mathrm dx \left[ \frac{\partial L}{\partial y} - \frac{\mathrm d}{\mathrm dx} \left( \frac{\partial L}{\partial y'} \right)\right]\delta  y = \int_{t_1}^{t_2} \mathrm dx \frac{\delta S}{\delta y}\delta y 
+$$
+
+即
+
+$$
+\frac{\delta S}{\delta y} = \frac{\partial L}{\partial y} - \frac{\mathrm d}{\mathrm dx} \left( \frac{\partial L}{\partial y'} \right)
+$$
+
+泛函$S$取极值时，$\dfrac{\delta S}{\delta y} = 0$，即
+
+$$
+\frac{\partial L}{\partial y} - \frac{\mathrm d}{\mathrm dx} \left( \frac{\partial L}{\partial y'} \right) = 0
+$$
+
+称为$Euler-Lagrange$方程. 通过这个方程，我们可以求解出$S$取极值时，$y = y(x)$的表达式.
+
+
+
+### 2. 最小作用量原理
+
+这个式子我们越看越眼熟...
+
+在[上一篇](https://blogs.starspress.org/posts/analmech_001/#213-%E6%96%B9%E7%A8%8B)，我们还介绍过另一个$Euler-Lagrange$方程
+
+$$
+\frac{\mathrm d}{\mathrm d t}(\frac{\partial L}{\partial \dot q^\alpha}) - \frac{\partial L}{\partial q^\alpha} =0
+$$
+
+它们具有极其相似的结构. 这让我们不禁想象：我们如果构造这样一个泛函
+
+$$
+S = \int_{t_1}^{t_2} \mathrm dt \ L(t, \mathbf q, \mathbf {\dot q})
+$$
+
+当物理系统的初末状态$t_1, t_2$确定时，若泛函$S$取到了极值，那么便可自然得出分析力学中的$Euler-Lagrange$方程.
+
+也就是说，当物理系统的初末状态确定时，物理系统的演化路径一定可以使得这样的泛函$S$取到极值.
+
+我们称这样的泛函$S$为**作用量**，这样的原理称作**最小作用量原理**[^3].
+
+最小作用量原理不仅仅适用于牛顿力学与确定的初末状态. 事实上，任何物理理论的演化均服从最小作用量原理.
+
+
+
+
+
+[^1]: 你别管为什么物理学家要管一个**泛函**叫被积**函数**，问就是我们乐意.（其实是因为我学的那个版本就这么叫）
 
 [^2]: 因为我们讨论的$S$是一个定积分式，要遍历积分区间内所有$x$的取值. 因此讨论某一个$\mathrm d x$带来的影响是没有意义的. 
+
+[^3]: 这个时候，作用量$S$可能处于极大值、极小值或者鞍点值. 因此，这个原理称为**稳恒作用量原理**可能更为合适.
