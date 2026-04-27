@@ -301,7 +301,7 @@ $$
 我们定义$L(t, \mathbf{q,\dot q }) = T - V$. 绝大多数情况下，动能$T$都是关于速度$\mathbf {\dot q}$的函数，而与位置$\mathbf q$无关；势能$V$都是关于位置$\mathbf { q}$的函数，而与速度$\mathbf {\dot q}$无关. 因此，上式可以改写成
 
 $$
-\frac{\mathrm d}{\mathrm d t}(\frac{\partial L}{\partial \dot q^\alpha}) - \frac{\partial L}{\partial q^\alpha} =0
+\frac{\mathrm d}{\mathrm d t}\left(\frac{\partial L}{\partial \dot q^\alpha}\right) - \frac{\partial L}{\partial q^\alpha} =0
 $$
 
 这个方程称为$Euler-Lagrange$方程. $L(t, \mathbf{q,\dot q })$称为系统的**拉格朗日量**$Lagrangian$. 我们将其反代回$D'Alembert$虚功原理表达式：
