@@ -89,6 +89,39 @@
     font-size: 0.7rem; color: #6677aa; text-align: center; line-height: 1.5;
     border-top: 1px solid #2a2a4a; padding-top: 8px; margin-top: 4px;
   }
+  .btn.help { min-width: 0; flex: 0 0 auto; padding: 9px 14px; }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+  .modal {
+    background: #14142e; border: 2px solid #3a3a6a; border-radius: 12px;
+    padding: 24px 28px; max-width: 440px; width: 90%;
+    box-shadow: 0 0 40px rgba(60,60,180,0.4); color: #d0d0e0;
+    max-height: 85vh; overflow-y: auto;
+  }
+  .modal h3 { color: #88aaff; margin-bottom: 14px; font-size: 1.1rem; letter-spacing: 1px; }
+  .modal h4 {
+    color: #aabbee; margin: 14px 0 6px; font-size: 0.9rem;
+    border-bottom: 1px solid #2a2a4a; padding-bottom: 4px;
+  }
+  .modal kbd {
+    display: inline-block; background: #1a1a38; border: 1px solid #3a3a6a;
+    border-radius: 4px; padding: 1px 7px; font-size: 0.78rem;
+    font-family: inherit; color: #ccd; margin: 0 2px;
+  }
+  .modal p, .modal li { font-size: 0.82rem; line-height: 1.7; color: #bcc; }
+  .modal ul { padding-left: 16px; margin: 4px 0; }
+  .modal .close-btn {
+    display: block; margin: 18px auto 0; padding: 8px 28px;
+    background: #2233aa; border: 1px solid #4466dd;
+    color: #eef; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+  }
+  .modal .close-btn:hover { background: #3344cc; }
   @media (max-width: 1080px) {
     .main-container { flex-direction: column; align-items: center; }
     .panel { max-width: 100%; width: 100%; }
@@ -137,15 +170,63 @@
       <button class="btn primary" id="btnPlay">▶ Play</button>
       <button class="btn" id="btnReset">↺ Reset</button>
       <button class="btn danger" id="btnClear">✕ Clear</button>
+      <button class="btn help" id="btnHelp">? Help</button>
     </div>
 
     <div class="status-badge status-editing" id="statusBadge">EDITING</div>
     <div class="instructions" id="instructions">
-      Click canvas to place body &bull; Drag bodies to move<br>
-      Right-click body to delete &bull; Space = Play/Pause<br>
-      <strong>New:</strong> Drag arrow handle to set launch<br>
-      Scroll over selected body to change mass
+      <strong>Mouse:</strong> Click = place body &bull; Drag = move<br>
+      Right-click = delete &bull; Scroll on body = &plusmn;mass<br>
+      Drag arrow handle = set speed/angle<br>
+      <strong>Touch:</strong> Tap = place &bull; Drag = move<br>
+      Long-press body = delete &bull; Double-tap = Play/Pause<br>
+      Space = Play/Pause &bull; R = Reset
     </div>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <h3>How to Play — Gravity Slingshot</h3>
+
+    <h4>🖱️ Mouse Controls</h4>
+    <ul>
+      <li><kbd>Click</kbd> empty space to place a celestial body.</li>
+      <li><kbd>Click</kbd> a body to select it (highlight ring appears).</li>
+      <li><kbd>Drag</kbd> a body to reposition it.</li>
+      <li><kbd>Right-click</kbd> a body to delete it.</li>
+      <li><kbd>Scroll</kbd> over a selected body to adjust its mass &plusmn;5.</li>
+      <li><kbd>Drag</kbd> the arrow handle near the launch point to set speed and angle interactively.</li>
+      <li>Use the panel sliders to fine-tune mass, speed, and angle.</li>
+    </ul>
+
+    <h4>📱 Touch Controls</h4>
+    <ul>
+      <li><kbd>Tap</kbd> empty space to place a celestial body.</li>
+      <li><kbd>Tap</kbd> a body to select it.</li>
+      <li><kbd>Drag</kbd> a body to reposition it.</li>
+      <li><kbd>Long-press</kbd> a body (~0.6s) to delete it.</li>
+      <li><kbd>Drag</kbd> the arrow handle or near the launch point to set speed and angle.</li>
+      <li><kbd>Double-tap</kbd> empty canvas to Play / Pause.</li>
+    </ul>
+
+    <h4>⌨️ Keyboard</h4>
+    <ul>
+      <li><kbd>Space</kbd> — Play / Pause / Resume</li>
+      <li><kbd>R</kbd> — Reset (return to editing mode)</li>
+      <li><kbd>Delete</kbd> or <kbd>Backspace</kbd> — Delete selected body</li>
+    </ul>
+
+    <h4>🎯 Objective</h4>
+    <p>
+      Place massive bodies to bend the asteroid's path with gravity, then launch it
+      from the blue <strong>🚀 Start</strong> marker and hit the green
+      <strong>🎯 Target</strong> on the right. The semi-transparent grey arrows show
+      the combined gravitational field.
+    </p>
+
+    <button class="close-btn" id="btnCloseModal">Close</button>
   </div>
 </div>
 
@@ -209,6 +290,11 @@
   let drag = null;
   // { type: 'body'|'velocity', idx?: number,
   //   startX, startY, origBodyX, origBodyY, origSpeed, origAngle }
+
+  // Mobile: long-press & double-tap
+  let longPressTimer = null;
+  let lastTapTime = 0;
+  let lastTapPos = { x: 0, y: 0 };
 
   // Offscreen canvas for gravitational field
   const fieldCanvas = document.createElement('canvas');
@@ -980,55 +1066,112 @@
 
   // Touch events
   canvas.addEventListener('touchstart', function(e) {
-    if (e.touches.length !== 1) return;
+    if (e.touches.length !== 1) { clearLongPress(); return; }
     const touch = e.touches[0];
     const pos = getCanvasPos(touch);
 
+    // Double-tap on empty space → play/pause (any mode)
+    const now = Date.now();
+    const tapDist = dist(pos, lastTapPos);
+    if (now - lastTapTime < 400 && tapDist < 20) {
+      lastTapTime = 0;
+      if (mode === 'editing' && findBodyAt(pos.x, pos.y) < 0 && !isNearHandle(pos.x, pos.y)) {
+        doPlay();
+        e.preventDefault();
+        return;
+      }
+      if (mode !== 'editing') {
+        doPlay();
+        e.preventDefault();
+        return;
+      }
+    }
+    lastTapTime = now;
+    lastTapPos = { x: pos.x, y: pos.y };
+
     if (mode !== 'editing') return;
 
+    // Velocity handle touch
+    if (isNearHandle(pos.x, pos.y) || isNearStart(pos.x, pos.y)) {
+      drag = { type: 'velocity', origSpeed: speed, origAngle: angleDeg };
+      updateVelocityFromHandle(pos.x, pos.y);
+      e.preventDefault();
+      return;
+    }
+
+    // Body touch → select + start long-press timer for delete
     const idx = findBodyAt(pos.x, pos.y);
     if (idx >= 0) {
       selectedIdx = idx;
       mass = bodies[idx].mass;
       syncMassToPanel();
       drag = { type: 'body', idx: idx, origX: pos.x, origY: pos.y,
-               origBodyX: bodies[idx].x, origBodyY: bodies[idx].y };
+               origBodyX: bodies[idx].x, origBodyY: bodies[idx].y, moved: false };
+      clearLongPress();
+      longPressTimer = setTimeout(function() {
+        if (drag && drag.type === 'body' && !drag.moved) {
+          bodies.splice(drag.idx, 1);
+          if (selectedIdx === drag.idx) { selectedIdx = -1; syncMassToPanel(); }
+          else if (selectedIdx > drag.idx) selectedIdx--;
+          fieldDirty = true; predictionDirty = true;
+          drag = null;
+          if (navigator.vibrate) navigator.vibrate(30);
+        }
+        longPressTimer = null;
+      }, 600);
       e.preventDefault();
       return;
     }
 
+    // Empty space → prepare to place
     drag = { type: 'place', startX: pos.x, startY: pos.y };
     e.preventDefault();
   }, { passive: false });
 
   canvas.addEventListener('touchmove', function(e) {
-    if (!drag || drag.type !== 'body') return;
+    if (!drag) return;
     e.preventDefault();
-    const pos = getCanvasPos(e.touches[0]);
-    const idx = drag.idx;
-    const dx = pos.x - drag.origX;
-    const dy = pos.y - drag.origY;
-    let nx = drag.origBodyX + dx;
-    let ny = drag.origBodyY + dy;
-    const r = bodies[idx].radius;
-    nx = clamp(nx, r, W - r);
-    ny = clamp(ny, r, H - r);
-    let ok = true;
-    if (dist({x:nx,y:ny}, START) < r + 18) ok = false;
-    if (dist({x:nx,y:ny}, TARGET) < r + TARGET_RADIUS + 12) ok = false;
-    for (let i = 0; i < bodies.length; i++) {
-      if (i === idx) continue;
-      if (dist({x:nx,y:ny}, bodies[i]) < r + bodies[i].radius + 10) { ok = false; break; }
+
+    // Cancel long-press if finger moves significantly
+    if (drag.type === 'body') {
+      const pos = getCanvasPos(e.touches[0]);
+      const moved = dist(pos, {x: drag.origX, y: drag.origY}) > 8;
+      if (moved) { drag.moved = true; clearLongPress(); }
+
+      const idx = drag.idx;
+      const dx = pos.x - drag.origX;
+      const dy = pos.y - drag.origY;
+      let nx = drag.origBodyX + dx;
+      let ny = drag.origBodyY + dy;
+      const r = bodies[idx].radius;
+      nx = clamp(nx, r, W - r);
+      ny = clamp(ny, r, H - r);
+      let ok = true;
+      if (dist({x:nx,y:ny}, START) < r + 18) ok = false;
+      if (dist({x:nx,y:ny}, TARGET) < r + TARGET_RADIUS + 12) ok = false;
+      for (let i = 0; i < bodies.length; i++) {
+        if (i === idx) continue;
+        if (dist({x:nx,y:ny}, bodies[i]) < r + bodies[i].radius + 10) { ok = false; break; }
+      }
+      if (ok) {
+        bodies[idx].x = nx;
+        bodies[idx].y = ny;
+        fieldDirty = true; predictionDirty = true;
+      }
+      return;
     }
-    if (ok) {
-      bodies[idx].x = nx;
-      bodies[idx].y = ny;
-      fieldDirty = true; predictionDirty = true;
+
+    if (drag.type === 'velocity') {
+      const pos = getCanvasPos(e.touches[0]);
+      updateVelocityFromHandle(pos.x, pos.y);
+      return;
     }
   }, { passive: false });
 
   canvas.addEventListener('touchend', function(e) {
+    clearLongPress();
     if (!drag) return;
+
     if (drag.type === 'place') {
       const pos = getCanvasPos(e.changedTouches[0]);
       const dx = pos.x - drag.startX;
@@ -1044,11 +1187,19 @@
           selectedIdx = bodies.length - 1;
           fieldDirty = true; predictionDirty = true;
           syncMassToPanel();
+        } else {
+          selectedIdx = -1;
+          syncMassToPanel();
         }
       }
     }
+
     drag = null;
   });
+
+  function clearLongPress() {
+    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+  }
 
   // Keyboard
   window.addEventListener('keydown', function(e) {
@@ -1132,6 +1283,21 @@
   btnPlay.addEventListener('click', doPlay);
   btnReset.addEventListener('click', doReset);
   btnClear.addEventListener('click', doClear);
+
+  // Help modal
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  const btnHelp = document.getElementById('btnHelp');
+  const btnCloseModal = document.getElementById('btnCloseModal');
+
+  btnHelp.addEventListener('click', function() {
+    modalBackdrop.classList.add('open');
+  });
+  btnCloseModal.addEventListener('click', function() {
+    modalBackdrop.classList.remove('open');
+  });
+  modalBackdrop.addEventListener('click', function(e) {
+    if (e.target === modalBackdrop) modalBackdrop.classList.remove('open');
+  });
 
   // ============ ANIMATION LOOP ============
   let lastTime = performance.now();
