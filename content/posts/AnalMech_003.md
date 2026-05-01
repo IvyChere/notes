@@ -282,7 +282,7 @@ $$
 \frac{\mathrm dF}{\mathrm dt} = \frac{\partial F}{\partial t} +\left[ F, H \right]_{PB}
 $$
 
-
+**つづく**
 
 
 
