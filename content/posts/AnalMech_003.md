@@ -189,7 +189,7 @@ $$
 \frac{\partial H}{\partial p_\alpha} = \dot q^\alpha - \frac{\partial L}{\partial p_\alpha} = \dot q^\alpha
 $$
 
-因此，我们将方程组
+因此，我们将方程组zhezhongq
 
 $$
 \left\{
@@ -210,7 +210,83 @@ $$
 
 ##### 2.3.3 已知演化路径的动力学问题
 
-在我们此前对最小作用量原理的推导中，我们讨论的都是这样的动力学问题：已知物理系统演化的初末状态，利用最小作用量原理求解系统演化的具体路径. 但其实，在一些情况下，我们知道物理系统究竟是怎样演化的，只是想要知道系统演化的结果. 
+在我们此前对最小作用量原理的推导中，我们讨论的都是这样的动力学问题：已知物理系统演化的初末状态，利用最小作用量原理求解系统演化的具体路径. 但其实，在一些情况下，我们知道物理系统究竟是怎样演化的，只是想要知道系统演化的结果. 我们可以用最小作用量原理来讨论这个问题. 
+
+此时系统的作用量：
+
+$$
+S = \int_{t_0}^{t} L \mathrm dt
+$$
+
+$$
+\delta S = \int_{t_0}^{t} \delta L \mathrm dt = \int_{t_0}^{t} \mathrm dt\left[ \frac{\partial L}{\partial q^\alpha}\delta q^\alpha + \frac{\mathrm d}{\mathrm dt}\left( \frac{\partial L}{\partial \dot q^\alpha}\delta q^\alpha \right) - \frac{\mathrm d}{\mathrm dt}\left( \frac{\partial L}{\partial \dot q^\alpha}\right) \delta q^\alpha  \right]
+$$
+
+$$
+= \int_{t_0}^{t} \mathrm dt\left[ \frac{\partial L}{\partial q^\alpha}\delta q^\alpha  - \frac{\mathrm d}{\mathrm dt}\left( \frac{\partial L}{\partial \dot q^\alpha}\right) \delta q^\alpha  \right] + \left. \left( \frac{\partial L}{\partial \dot q^\alpha}\delta q^\alpha \right) \right|_{t_0}^{t}
+$$
+
+由于系统演化的物理路径已经确定，故$ \dfrac{\partial L}{\partial q^\alpha}  - \dfrac{\mathrm d}{\mathrm dt}\left( \dfrac{\partial L}{\partial \dot q^\alpha}\right) = 0$恒成立. 又由于起始状态确定，因而$\delta q^\alpha(t_0) = 0$ . 因此，上式可以化为：
+
+$$
+\delta S = \frac{\partial L}{\partial \dot q^\alpha}\delta q^\alpha \Rightarrow \delta S = p_\alpha \delta q^\alpha
+$$
+
+我们思考一下$S$和什么参数有关. 首先，由于$L = L(t, \mathbf q, \mathbf{\dot q})$，因此$S$至多和$(t, \mathbf q, \mathbf{\dot q})$有关. 其中，和时间$t$有关是显然的，因为我们讨论的就是物理系统随时间的演化结果；此外，由于物理系统演化路径已经确定，因此我们一定可以从$Euler-Lagrange$方程中求解出广义坐标$\mathbf q = \mathbf q(t)$与广义速度$\mathbf{\dot q} = \mathbf{\dot q}(t)$的关系，所以我们只需要知道系统的广义坐标$\mathbf q$即可. 所以，$S = S(t, \mathbf q)$. 故有：
+
+$$
+\delta S = \frac{\partial S}{\partial q^\alpha} \delta q^\alpha
+$$
+
+我们可以得到
+
+$$
+p_\alpha = \frac{\partial S}{\partial q^\alpha}
+$$
+
+进一步，对$S$求时间的全导数
+
+$$
+\frac{\mathrm d S}{\mathrm d t} = \frac{\partial S}{\partial t} + \frac{\partial S}{\partial q^\alpha}\dot q^\alpha
+$$
+
+同时我们还有$\dfrac{\mathrm dS}{\mathrm dt} = L = p_\alpha q^\alpha - H$，$p_\alpha = \dfrac{\partial S}{\partial q^\alpha}$，代入
+
+$$
+\frac{\partial S}{\partial t} + H(t, \mathbf q, \mathbf p) = 0
+$$
+
+称为$Hailton-Jacobi$方程.
+
+
+
+##### 2.3.4 力学量随时间的演化
+
+假设一个力学量$F$，其与系统所处的状态$(\mathbf q, \mathbf p)$以及时间$t$相关. 我们
+
+考虑一下其关于时间的演化
+
+$$
+\frac{\mathrm dF}{\mathrm dt} = \frac{\partial F}{\partial t} + \frac{\partial F}{\partial q^\alpha}\dot q^\alpha + \frac{\partial F}{\partial p_\alpha}\dot p_\alpha
+$$
+
+其中，由于$\dfrac{\partial H}{\partial p_\alpha} = \dot q^\alpha , \dfrac{\partial H}{\partial q^\alpha} = - \dot p_\alpha$，可以得到
+
+$$
+\frac{\mathrm dF}{\mathrm dt} = \frac{\partial F}{\partial t} + \frac{\partial F}{\partial q^\alpha}\frac{\partial H}{\partial p_\alpha} - \frac{\partial F}{\partial p_\alpha}\frac{\partial H}{\partial q^\alpha}
+$$
+
+在这里，我们引入一个更方便的记号：$Poisson$括号$\left[ F, G \right]_{PB} = \dfrac{\partial F}{\partial q^\alpha}\dfrac{\partial G}{\partial p_\alpha} - \dfrac{\partial F}{\partial p_\alpha}\dfrac{\partial G}{\partial q^\alpha}$. 这样，这个式子就可以写成
+
+$$
+\frac{\mathrm dF}{\mathrm dt} = \frac{\partial F}{\partial t} +\left[ F, H \right]_{PB}
+$$
+
+
+
+
+
+
 
 
 
