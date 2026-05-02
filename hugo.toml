@@ -13,6 +13,8 @@ paginate = 8
 # 启用 robots.txt
 enableRobotsTXT = true
 
+hasCJKLanguage = true
+
 [params]
   # 网站描述，会显示在 HTML meta 标签中
   description = "Ivy_C 的笔记"
@@ -75,7 +77,7 @@ weight = 15
   identifier = "archives"
   name = "归档"
   url = "/archives/"
-  weight = 20
+  weight = 17
 
 
 
