@@ -189,7 +189,7 @@ $$
 \frac{\partial H}{\partial p_\alpha} = \dot q^\alpha - \frac{\partial L}{\partial p_\alpha} = \dot q^\alpha
 $$
 
-因此，我们将方程组zhezhongq
+因此，我们将方程组
 
 $$
 \left\{
