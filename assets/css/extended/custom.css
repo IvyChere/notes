@@ -1,0 +1,17 @@
+/* 针对手机屏幕调整基础字号 */
+@media (max-width: 768px) {
+    html {
+        font-size: 14px; /* 默认是 16px 或 18px，你可以按喜好调整 */
+    }
+    /* 可选：让标题也相应小一点 */
+    .post-title {
+        font-size: 1.6rem;
+    }
+}
+
+/* 让块级公式容器可滚动 */
+.katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 4px; /* 留一点空间给滚动条 */
+}
