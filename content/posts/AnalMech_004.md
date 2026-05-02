@@ -88,7 +88,9 @@ $$
 
 #### 1.2 $Levi-Civita$张量
 
-我们一般会这么定义$Levi-Civita$张量$\epsilon_{ijk}$：
+在线性空间$\mathbb R^n$中，我们一定可以找到一组单位正交基向量$\left\{ \mathbf{e}_1, \mathbf{e}_2,\ \dots, \mathbf{e}_n \right\}$. 我们从中选取两个基向量$\mathbf{e}_i, \mathbf{e}_j$，我们记$\mathbf{e}_i \times \mathbf{e}_j = \epsilon_{ijk}\ \mathbf e_k$. 我们称$\epsilon_{ijk}$为$Levi-Civita$张量.
+
+我们一般会这么定义$Levi-Civita$张量：
 
 $$
 \epsilon_{ijk} = \left\{
@@ -115,9 +117,9 @@ $$
 $$
 \epsilon_{ijk} = 
 \begin{vmatrix}
-\delta_{1i} & \delta_{2i} & \delta_{3i} \\
-\delta_{1j} & \delta_{2j} & \delta_{3j} \\
-\delta_{1l} & \delta_{2k} & \delta_{3k}
+\delta_{1i} & \delta_{1j} & \delta_{1k} \\
+\delta_{2i} & \delta_{2j} & \delta_{2k} \\
+\delta_{3i} & \delta_{3j} & \delta_{3k}
 \end{vmatrix}
 $$
 
@@ -139,6 +141,118 @@ $$
 
 ##### 1.2.1 性质
 
+###### 1.2.1.1 缩并性
+
+$$
+\epsilon_{ijk}\epsilon_{pqr} = 
+\begin{vmatrix}
+\delta_{pi} & \delta_{qi} & \delta_{ri} \\
+\delta_{pj} & \delta_{qj} & \delta_{rj} \\
+\delta_{pk} & \delta_{qk} & \delta_{rk}
+\end{vmatrix}
+$$
+
+特殊且更常用的形式是，当$r = k$时：
+
+$$
+\epsilon_{ijk}\epsilon_{pqk} = \delta_{ip}\delta_{jq} - \delta_{iq}\delta_{jp}
+$$
+
+我们可以这么记忆：第一项的指标的顺序是$ij, pq$，为顺序；第二项指标的顺序是$ij, qp$，为逆序. 因此，这个结论可以记为 **“顺序减逆序”**. 当然如果你有更好的记忆方法也可以就是了（
+
+我们来证明第一个结论. 
+
+设矩阵$\mathrm A = \begin{pmatrix}
+\delta_{1i} & \delta_{1j} & \delta_{1k} \\
+\delta_{2i} & \delta_{2j} & \delta_{2k} \\
+\delta_{3i} & \delta_{3j} & \delta_{3k}
+\end{pmatrix}$, $\mathrm B = \begin{pmatrix}
+\delta_{1p} & \delta_{1q} & \delta_{1r} \\
+\delta_{2p} & \delta_{2q} & \delta_{2r} \\
+\delta_{3p} & \delta_{3q} & \delta_{3r}
+\end{pmatrix}$. 故$\epsilon_{ijk}\epsilon_{pqr} = \det \mathrm A \det \mathrm B = \det \left( \mathrm A\mathrm B \right) = \det(AB^{\mathrm T})$. 我们考虑$\mathrm A \mathrm B^{\mathrm T}$的第$m$行第$n$列的项：
+
+$$
+(\mathrm A\mathrm B^{\mathrm T})_{mn} = \mathrm A_{ml} \mathrm B_{ln}^{\mathrm T} = \delta_{ml} \delta_{nl} = \delta_{mn}
+$$
+
+其中，$m = i, j, k;\ n = p, q, r$.
+
+因此：
+
+$$
+\epsilon_{ijk}\epsilon_{pqr} = \det {AB^{\mathrm T}} = 
+\begin{vmatrix}
+\delta_{pi} & \delta_{qi} & \delta_{ri} \\
+\delta_{pj} & \delta_{qj} & \delta_{rj} \\
+\delta_{pk} & \delta_{qk} & \delta_{rk}
+\end{vmatrix}
+$$
+
+得证. 
+
+###### 1.2.1.2 反对称性
+
+$\epsilon_{ijk} = -\epsilon_{ikj} = -\epsilon_{kji} = -\epsilon_{jik}$，我们称其具有反对称性.
+
+考虑一个对称的张量$F_{ij} = F_{ji}$，我们有：$\epsilon_{ijk}F_{ij} = 0$. 下给出证明：
+
+$$
+\epsilon_{ijk}F_{ij} = \frac1 2 \epsilon_{ijk}F_{ij} + \frac1 2 \epsilon_{ijk}F_{ij} = \frac1 2 \epsilon_{ijk}F_{ij} - \frac1 2 \epsilon_{jik}F_{ji}
+$$
+
+由于第二项的$ij$是哑指标，我们可以通过更换指标字母$i \rightarrow j, j \rightarrow i$，得到
+
+$$
+\epsilon_{ijk}F_{ij} = \frac1 2 \epsilon_{ijk}F_{ij} - \frac1 2 \epsilon_{ijk}F_{ij} = 0
+$$
+
+得证.
+
+
+
+##### 1.2.2 应用
+
+对于两个矢量$\mathbf A = A_i \mathbf e_i, \mathbf B = B_j \mathbf e_j$
+
+$$
+\mathbf{A \times B} = (A_i \mathbf e_i) \times (B_j \mathbf e_j) = A_i B_i (\mathbf e_i \times \mathbf e_j) = (\epsilon_{ijk}A_i B_j) \mathbf e_k
+$$
+
+因此，$\mathbf{A \times B}$的第$k$分量$(\mathbf{A \times B})_k = \epsilon_{ijk}A_i B_j$. 很多情况下，我们讨论$\mathbf{A \times B}$，只需要讨论其某一个分量即可. 
+
+更进一步：
+
+$$
+\begin{aligned}
+& \ \ \ \ \ \ (\mathbf A \times \mathbf B) \cdot (\mathbf C \times \mathbf D) = (\mathbf A \times \mathbf B)_i (\mathbf C \times \mathbf D)_i \\
+\\
+&= (\epsilon_{ijk} A_j B_k)(\epsilon_{ilm} C_l D_m) = \epsilon_{ijk}\epsilon_{ilm}  A_j B_kC_l D_m \\
+\\
+&= (\delta_{jl}\delta_{km} - \delta_{jm}\delta_{kl})A_j B_kC_l D_m \\
+\\
+&= \delta_{jl}\delta_{km}A_j B_kC_l D_m - \delta_{jm}\delta_{kl}A_j B_kC_l D_m \\
+\\
+&= A_j B_k C_j D_k - A_j B_k C_k D_j \\
+\\
+&= (A_j C_j)(B_k D_k) - (A_j D_j)(B_k C_k) \\
+\\
+&= (\mathbf {A \cdot C})(\mathbf {B \cdot D}) - (\mathbf {A \cdot D})(\mathbf {B \cdot C})
+\end{aligned}
+$$
+
+即
+
+$$
+(\mathbf A \times \mathbf B) \cdot (\mathbf C \times \mathbf D) = (\mathbf {A \cdot C})(\mathbf {B \cdot D}) - (\mathbf {A \cdot D})(\mathbf {B \cdot C})
+$$
+
+
+
+
+
 
 
 [^1]: 逆序数就是你学习线性代数它教材第一章上来就甩到你脸上的东西
+
+
