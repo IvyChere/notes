@@ -98,3 +98,12 @@ weight = 15
 
 [outputs]
   home = ["HTML", "RSS", "JSON"]
+
+# 使用 CSS classes 来渲染高亮，而不是内联样式
+pygmentsUseClasses = true
+
+# (可选) 防止代码行号被选中
+[markup.highlight]
+  noClasses = false  # 如果上面设了 true，这里必须为 false
+  lineNos = true    # 全局启用行号
+  lineNumbersInTable = false # 不使用复杂的表格布局，更简洁

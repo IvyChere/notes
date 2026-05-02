@@ -9,7 +9,7 @@ description = "泛函、变分法与最小作用量原理"
 summary = "泛函、变分法与最小作用量原理"
 +++
 
-Tip: 分析力学的往期内容戳[这里](https://blogs.starspress.org/tags/%E5%88%86%E6%9E%90%E5%8A%9B%E5%AD%A6/)
+Tip: 分析力学的往期内容戳[这里](https://blogs.starspress.org/categories/%E5%88%86%E6%9E%90%E5%8A%9B%E5%AD%A6/)
 
 ### 0. 从最速降线问题讲起......
 

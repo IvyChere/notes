@@ -9,7 +9,7 @@ description = "Poisson 括号"
 summary = "Poisson 括号与矢量分析基础"
 +++
 
-Tip: 分析力学的往期内容戳[这里](https://blogs.starspress.org/tags/%E5%88%86%E6%9E%90%E5%8A%9B%E5%AD%A6/)
+Tip: 分析力学的往期内容戳[这里](https://blogs.starspress.org/categories/%E5%88%86%E6%9E%90%E5%8A%9B%E5%AD%A6/)
 
 ### 1. 矢量分析基础
 
@@ -254,5 +254,3 @@ $$
 
 
 [^1]: 逆序数就是你学习线性代数它教材第一章上来就甩到你脸上的东西
-
-

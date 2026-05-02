@@ -9,7 +9,7 @@ description = "从牛顿力学出发..."
 summary = "从牛顿第二定律到拉格朗日方程"
 +++
 
-Tip: 分析力学的往期内容戳[这里](https://blogs.starspress.org/tags/%E5%88%86%E6%9E%90%E5%8A%9B%E5%AD%A6/)
+Tip: 分析力学的往期内容戳[这里](https://blogs.starspress.org/categories/%E5%88%86%E6%9E%90%E5%8A%9B%E5%AD%A6/)
 
 ### 1. 牛顿第二定律
 

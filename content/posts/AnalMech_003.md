@@ -9,7 +9,7 @@ description = "从拉格朗日到哈密顿"
 summary = "从拉格朗日到哈密顿"
 +++
 
-Tip: 分析力学的往期内容戳[这里](https://blogs.starspress.org/tags/%E5%88%86%E6%9E%90%E5%8A%9B%E5%AD%A6/)
+Tip: 分析力学的往期内容戳[这里](https://blogs.starspress.org/categories/%E5%88%86%E6%9E%90%E5%8A%9B%E5%AD%A6/)
 
 ### 1. 能量函数与广义能量守恒
 
