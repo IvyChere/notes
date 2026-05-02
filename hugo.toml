@@ -43,6 +43,10 @@ hasCJKLanguage = true
   
   search = true
 
+[params.homeInfoParams]
+  title = "Ivy_C's Notes"
+  content = "我的笔记，记录自己学习到的各种奇奇怪怪的东西"
+
 [markup.goldmark.extensions.passthrough]
   enable = true
 [markup.goldmark.extensions.passthrough.delimiters]
