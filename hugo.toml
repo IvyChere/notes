@@ -61,15 +61,23 @@ enableRobotsTXT = true
   url = "/search/"
   weight = 30
 
-  [[menu.main]]
-    name = "分类"
-    url = "/categories/"
-    weight = 20
-
-  [[menu.main]]
-  name = "Ivy_C"
-  url = "/about/"
+[[menu.main]]
+  name = "分类"
+  url = "/categories/"
   weight = 20
+
+[[menu.main]]
+name = "Ivy_C"
+url = "/about/"
+weight = 15
+
+[[menu.main]]
+  identifier = "archives"
+  name = "归档"
+  url = "/archives/"
+  weight = 20
+
+
 
 # 社交链接配置
 [[params.socialIcons]]
