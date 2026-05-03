@@ -1,5 +1,5 @@
 /* 针对手机屏幕调整基础字号 */
-@media (max-width: 768px) {
+@media (max-width: 720px) {
     html {
         font-size: 14px; /* 默认是 16px 或 18px，你可以按喜好调整 */
     }

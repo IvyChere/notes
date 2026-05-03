@@ -124,7 +124,11 @@ $$
 对比一下各项系数，巧了，我们可以得到：
 
 $$
-\delta S = \left. \left( \frac{\mathrm d \tilde S}{\mathrm d \epsilon} \right) \right|_{\epsilon = 0} =\int_{t_1}^{t_2} \left. \frac{\mathrm d}{\mathrm d \epsilon}L(x, y+\epsilon \delta y,y' + \epsilon \delta y', \dots )\right|_{\epsilon = 0} \mathrm d x = \int_{t_1}^{t_2}\mathrm d x \left( \frac{\partial L}{\partial y}\delta  y + \frac{\partial L}{\partial y'}\delta  y'+ \dots \right)
+\begin{aligned}
+\delta S &= \left. \left( \frac{\mathrm d \tilde S}{\mathrm d \epsilon} \right) \right|_{\epsilon = 0} =\int_{t_1}^{t_2} \left. \frac{\mathrm d}{\mathrm d \epsilon}L(x, y+\epsilon \delta y,y' + \epsilon \delta y', \dots )\right|_{\epsilon = 0} \mathrm d x \\
+\\
+&= \int_{t_1}^{t_2}\mathrm d x \left( \frac{\partial L}{\partial y}\delta  y + \frac{\partial L}{\partial y'}\delta  y'+ \dots \right)
+\end{aligned}
 $$
 
 所以我们就有
@@ -166,16 +170,17 @@ $$
 回代：
 
 $$
-\delta S = \int_{t_1}^{t_2}\mathrm dx \left( \frac{\partial L}{\partial y}\delta  y + \frac{\partial L}{\partial y'}\delta  y' \right) 
+\begin{aligned}
+\delta S &= \int_{t_1}^{t_2}\mathrm dx \left( \frac{\partial L}{\partial y}\delta  y + \frac{\partial L}{\partial y'}\delta  y' \right) \\
+\\
+&=  \int_{t_1}^{t_2}\mathrm dx \left[ \frac{\mathrm d}{\mathrm dx}\left( \frac{\partial L}{\partial y'}\delta y \right) + \frac{\partial L}{\partial y}\delta  y - \frac{\mathrm d}{\mathrm dx} \left( \frac{\partial L}{\partial y'} \right)\delta y\right] \\
+\\
+&= \left. \left( \frac{\partial L}{\partial y'}\delta y \right)\right|_{t_1}^{t_2} + \int_{t_1}^{t_2}\mathrm dx \left[ \frac{\partial L}{\partial y} - \frac{\mathrm d}{\mathrm dx} \left( \frac{\partial L}{\partial y'} \right)\right]\delta y
+\end{aligned} 
 $$
 
-$$
-=  \int_{t_1}^{t_2}\mathrm dx \left[ \frac{\mathrm d}{\mathrm dx}\left( \frac{\partial L}{\partial y'}\delta y \right) + \frac{\partial L}{\partial y}\delta  y - \frac{\mathrm d}{\mathrm dx} \left( \frac{\partial L}{\partial y'} \right)\delta y\right]
-$$
 
-$$
-= \left. \left( \frac{\partial L}{\partial y'}\delta y \right)\right|_{t_1}^{t_2} + \int_{t_1}^{t_2}\mathrm dx \left[ \frac{\partial L}{\partial y} - \frac{\mathrm d}{\mathrm dx} \left( \frac{\partial L}{\partial y'} \right)\right]\delta  y
-$$
+
 
 我们称$\left. \left( \dfrac{\partial L}{\partial y'}\delta y \right)\right|_{t_1}^{t_2}$为泛函$S$的**边界项**，称$\dfrac{\partial L}{\partial y'}\delta y$为被积函数的**全导数项**. 当泛函$S_1$与$S_2$仅相差边界项时，或者被积函数$L_1$与$L_2$仅相差全导数项时，我们记为$S_1 \simeq S_2, L_1 \simeq L_2$.
 
@@ -230,6 +235,8 @@ $$
 对于不同的物理学理论，我们只要构造出合适的作用量，便可以通过最小作用量原理得出该理论下物理系统的演化路径.
 
 **つづく**
+
+
 
 
 
