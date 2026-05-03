@@ -48,10 +48,23 @@ code, pre {
     }
 
     /* 3. 允许行内公式在必要时换行 */
+    /* 强力覆盖 KaTeX 内部的各种 nowrap */
+    .katex * {
+        white-space: normal !important;
+    }
+    
+    /* 同时让行内公式本身能够自动换行，并保持行内显示 */
     .katex {
         white-space: normal !important;
-        word-break: break-all;
+        word-break: break-word;   /* 更优雅的断词方式 */
+        overflow-wrap: break-word;
     }
+    
+    /* 如果某些 span 还有顽固的 nowrap，直接覆盖 */
+    .katex [style*="white-space: nowrap"] {
+        white-space: normal !important;
+    }
+
     /* 4. 最关键：限制所有父容器不允许溢出 */
     .post-content,
     .post-content p,
