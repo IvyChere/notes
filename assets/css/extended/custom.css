@@ -18,24 +18,22 @@ code, pre {
         monospace;
 }
 
-/* ========== 移动端公式防溢出（基于实际 MathJax 结构） ========== */
+/* ========== 移动端公式防溢出（温和修复版） ========== */
 @media (max-width: 768px) {
 
-    /* 1. 让 mjx-container 成为一个可以换行的行内元素 */
-    mjx-container,
-    .MathJax,
-    .MathJax * {
-        display: inline !important;       /* 确保是行内元素，允许参与文本换行 */
-        white-space: normal !important;   /* 允许内部换行 */
-        word-break: break-word;           /* 温和的断词 */
-        overflow-wrap: break-word;        /* 也是一层保障 */
+    /* 1. 行内公式容器：允许它内部的文本断行，但不去控制内部的子元素 */
+    mjx-container:not([display="true"]) {
+        white-space: normal !important;    /* 允许换行 */
+        word-break: break-word;           /* 必要时断词 */
+        overflow-wrap: break-word;
+        display: inline !important;       /* 确保它作为行内元素随文字流动 */
     }
 
-    /* 2. 特殊情况：如果是块级公式（它会有 display: true 属性），就恢复为块级并允许滚动 */
+    /* 2. 块级公式容器：保持不换行，使用横向滚动条 */
     mjx-container[display="true"],
     .MathJax_Display {
-        display: block !important;        /* 恢复块级显示 */
-        white-space: nowrap !important;   /* 块级公式不换行，用滚动条 */
+        white-space: nowrap !important;
+        display: block !important;
         overflow-x: auto !important;
         overflow-y: hidden;
         max-width: 100% !important;
@@ -43,7 +41,7 @@ code, pre {
         padding-bottom: 4px;
     }
 
-    /* 3. 兜底：所有父容器都不能有溢出 */
+    /* 3. 保护父容器不产生横向溢出 */
     .post-content,
     .post-content p,
     .post-content div {
