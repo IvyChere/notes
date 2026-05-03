@@ -1,13 +1,15 @@
-/* 全局字体设置 */
+/* ==========================================
+   全局字体设置
+   ========================================== */
 body {
     font-family:
         "PingFang SC",        /* macOS / iOS */
         "Microsoft YaHei",    /* Windows */
         "Noto Sans SC",       /* Android / Linux */
-        sans-serif;           /* 兜底字体 */
+        sans-serif;
 }
 
-/* 代码块保持等宽字体（可选） */
+/* 代码块保持等宽字体 */
 code, pre {
     font-family:
         "Fira Code",
@@ -16,60 +18,41 @@ code, pre {
         monospace;
 }
 
-/* 针对手机屏幕调整基础字号 */
-@media (max-width: 720px) {
+/* ==========================================
+   手机端适配：字号、标题、公式换行
+   ========================================== */
+@media (max-width: 768px) {
+    /* --- 基础字号 --- */
     html {
-        font-size: 14px; /* 默认是 16px 或 18px，你可以按喜好调整 */
+        font-size: 14px;
     }
-    /* 可选：让标题也相应小一点 */
     .post-title {
         font-size: 1.6rem;
     }
-}
 
-/* ========== 移动端公式防溢出 ========== */
-@media (max-width: 768px) {
-
-    /* 1. 确保所有公式容器都能滚动 */
-    .MathJax_Display,
-    .MathJax {
-        overflow-x: auto;
-        overflow-y: hidden;
-        max-width: 100%;
-        -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
-    }
-
-    /* 2. 块级公式容器加一点内边距，防止滚动条遮挡 */
-    .MathJax_Display {
-        padding-bottom: 4px;
-    }
-
-    /* 3. 允许行内公式在必要时换行 */
-/* 针对移动端强制 MathJax 行内公式换行 */
-@media screen and (max-width: 768px) {
-    /* 目标：强制所有 MathJax 行内公式容器允许换行 */
-    .post-content mjx-container {
+    /* --- 行内公式换行（强力覆盖 MathJax 的 nowrap） --- */
+    mjx-container {
         white-space: normal !important;
     }
-    
-    /* 进阶：仅在必要时对公式内部元素断词，避免破坏结构 */
-    .post-content mjx-container * {
+    mjx-container * {
         word-break: break-word;
         overflow-wrap: break-word;
     }
-    
-    /* 保留一个优雅的横向滚动方案，作为无法完美换行时的后备 */
-    .post-content .MathJax_Display,
-    .post-content mjx-container.MathJax_Display {
-        overflow-x: auto;
+
+    /* --- 块级公式滚动（作为无法完美换行时的后备方案） --- */
+    mjx-container[display="true"] {
+        overflow-x: auto !important;
         overflow-y: hidden;
+        max-width: 100% !important;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
     }
-}
-    /* 4. 最关键：限制所有父容器不允许溢出 */
+
+    /* --- 防止父容器撑出横向滚动条 --- */
     .post-content,
     .post-content p,
     .post-content div {
-        overflow-x: clip;     /* clip 比 hidden 更安全，不生成滚动条 */
+        overflow-x: clip;
         max-width: 100%;
     }
 }
