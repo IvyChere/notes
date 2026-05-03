@@ -18,9 +18,8 @@ code, pre {
         monospace;
 }
 
-/* ========== 移动端公式防溢出（最终修复版） ========== */
+/* ========== 移动端公式防溢出（最终可滚动版） ========== */
 @media (max-width: 768px) {
-    /* --- 1. 基础字号与标题 --- */
     html {
         font-size: 14px;
     }
@@ -28,15 +27,19 @@ code, pre {
         font-size: 1.6rem;
     }
 
-    /* --- 2. 行内公式容器：温和地允许换行 --- */
+    /* 行内公式：允许横向滚动 */
     mjx-container:not([display="true"]) {
-        white-space: normal !important;
-        word-break: break-word;
-        overflow-wrap: break-word;
-        display: inline !important;
+        display: inline-block !important;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap !important;
+        vertical-align: middle;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 2px;
     }
 
-    /* --- 3. 块级公式容器：不允许换行，但可以横向滚动 --- */
+    /* 块级公式：同上，保持横向滚动 */
     mjx-container[display="true"],
     .MathJax_Display {
         white-space: nowrap !important;
@@ -48,7 +51,6 @@ code, pre {
         padding-bottom: 4px;
     }
 
-    /* --- 4. 防止父容器横向溢出 --- */
     .post-content,
     .post-content p,
     .post-content div {
