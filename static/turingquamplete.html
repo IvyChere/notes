@@ -1,0 +1,4930 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turing Quamplete — 双量子比特电路游戏</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+
+    /* ============================================================
+       CSS 自定义属性 & 全局重置
+       ============================================================ */
+    :root {
+      /* 主题色 */
+      --bg-deep: #0a0a1a;
+      --bg-card: #141428;
+      --bg-cell: #1a1a2e;
+      --bg-cell-hover: #1f1f3a;
+      --text-primary: #e0e0f0;
+      --text-secondary: #8888aa;
+      --text-dim: #555577;
+      --border-color: #2a2a4a;
+      --border-active: #4444aa;
+
+      /* 量子门配色 */
+      --gate-h: #00bcd4;
+      --gate-x: #e74c3c;
+      --gate-y: #f39c12;
+      --gate-z: #f1c40f;
+      --gate-cnot: #9b59b6;
+      --gate-erase: #666688;
+      --gate-locked: #333344;
+      --gate-locked-text: #555566;
+
+      /* 功能色 */
+      --accent-run: #2ecc71;
+      --accent-run-hover: #27ae60;
+      --accent-add: #3498db;
+      --accent-add-hover: #2980b9;
+      --accent-warn: #e67e22;
+      --accent-info: #1abc9c;
+
+      /* 网格 */
+      --cell-size: 56px;
+      --cell-gap: 10px;
+      --cell-radius: 6px;
+
+      /* 动画预留 */
+      --glow-color: transparent;
+      --glow-spread: 0px;
+    }
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    /* ============================================================
+       主布局：CSS Grid
+       ============================================================ */
+    #app-container {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      grid-template-columns: 180px 1fr 280px;
+      grid-template-areas:
+        "topbar    topbar    topbar"
+        "gatepanel circgrid infopanel"
+        "bottombar bottombar bottombar";
+      height: 100vh;
+      gap: 1px;
+      background: var(--border-color);
+    }
+
+    /* ============================================================
+       顶部标题栏 #topbar
+       ============================================================ */
+    #topbar {
+      grid-area: topbar;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 52px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    #topbar .game-title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #00bcd4, #9b59b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    #topbar .topbar-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* 顶部按钮通用样式 */
+    .btn-topbar {
+      padding: 6px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--bg-cell);
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-topbar:hover {
+      background: var(--bg-cell-hover);
+      color: var(--text-primary);
+      border-color: var(--border-active);
+    }
+
+    /* ============================================================
+       左侧量子门面板 #gate-panel
+       ============================================================ */
+    #gate-panel {
+      grid-area: gatepanel;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 10px;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border-color);
+      overflow-y: auto;
+    }
+
+    #gate-panel .panel-label {
+      font-size: 12px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    /* 门按钮基类 */
+    .gate-btn {
+      width: 54px;
+      height: 54px;
+      border: 2px solid transparent;
+      border-radius: 10px;
+      background: var(--bg-cell);
+      color: var(--text-primary);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      user-select: none;
+    }
+    .gate-btn:hover {
+      border-color: var(--border-active);
+      transform: scale(1.04);
+    }
+    .gate-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* 快捷键角标 */
+    .gate-btn .shortcut {
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--text-dim);
+      margin-top: 1px;
+    }
+
+    /* 各门配色 */
+    .gate-btn[data-gate="H"]    { border-color: var(--gate-h);    color: var(--gate-h); }
+    .gate-btn[data-gate="X"]    { border-color: var(--gate-x);    color: var(--gate-x); }
+    .gate-btn[data-gate="Y"]    { border-color: var(--gate-y);    color: var(--gate-y); }
+    .gate-btn[data-gate="Z"]    { border-color: var(--gate-z);    color: var(--gate-z); }
+    .gate-btn[data-gate="S"]    { border-color: #1abc9c;         color: #1abc9c; }
+    .gate-btn[data-gate="CNOT"] { border-color: var(--gate-cnot); color: var(--gate-cnot); }
+    .gate-btn[data-gate="ERASE"] { border-color: var(--gate-erase); color: var(--gate-erase); }
+
+    /* 锁定态 */
+    .gate-btn.locked {
+      border-color: var(--gate-locked) !important;
+      color: var(--gate-locked-text) !important;
+      background: #1a1a24;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .gate-btn.locked::after {
+      content: "🔒";
+      position: absolute;
+      font-size: 11px;
+      top: 4px;
+      right: 6px;
+    }
+
+    /* 擦除按钮放最下方 */
+    #gate-panel .spacer {
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ============================================================
+       中央电路网格 #circuit-area
+       ============================================================ */
+    #circuit-area {
+      grid-area: circgrid;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-deep);
+      overflow: auto;
+      padding: 20px;
+    }
+
+    #circuit-area .circuit-title {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+
+    /* 网格外层——水平可滚动 */
+    .circuit-scroll {
+      flex: 1;
+      overflow-x: auto;
+      overflow-y: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-bottom: 10px;
+    }
+
+    /* 网格容器 — CSS Grid: 2行 + 1标题行 */
+    .circuit-grid {
+      display: grid;
+      grid-template-columns: 40px repeat(8, var(--cell-size));
+      grid-template-rows: auto 1fr 1fr;
+      gap: var(--cell-gap);
+      align-items: center;
+    }
+
+    /* 时间步序号 */
+    .circuit-grid .timestep-label {
+      grid-row: 1;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-dim);
+      padding-bottom: 2px;
+    }
+
+    /* 量子比特标签 */
+    .circuit-grid .qubit-label {
+      grid-column: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-style: italic;
+      height: var(--cell-size);
+    }
+    .circuit-grid .qubit-label.q0 { grid-row: 2; }
+    .circuit-grid .qubit-label.q1 { grid-row: 3; }
+
+    /* 电路网格单元格 */
+    .circuit-cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      border-radius: var(--cell-radius);
+      border: 1px solid var(--border-color);
+      background: var(--bg-cell);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+
+      /* 微光预留 */
+      box-shadow: 0 0 var(--glow-spread) var(--glow-color);
+    }
+    .circuit-cell:hover {
+      border-color: var(--border-active);
+      background: #1f1f3a;
+    }
+
+    /* 放置门后的单元格样式 (通过 data-gate 属性驱动) */
+    .circuit-cell[data-gate="H"]    { border-color: var(--gate-h);    --glow-color: var(--gate-h);    --glow-spread: 6px; }
+    .circuit-cell[data-gate="X"]    { border-color: var(--gate-x);    --glow-color: var(--gate-x);    --glow-spread: 6px; }
+    .circuit-cell[data-gate="Y"]    { border-color: var(--gate-y);    --glow-color: var(--gate-y);    --glow-spread: 6px; }
+    .circuit-cell[data-gate="Z"]    { border-color: var(--gate-z);    --glow-color: var(--gate-z);    --glow-spread: 6px; }
+    .circuit-cell[data-gate="CNOT"] { border-color: var(--gate-cnot); --glow-color: var(--gate-cnot); --glow-spread: 8px; }
+
+    /* 单元格内门符号 */
+    .circuit-cell .gate-symbol {
+      font-size: 16px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+    .circuit-cell[data-gate="H"]    .gate-symbol { color: var(--gate-h); }
+    .circuit-cell[data-gate="X"]    .gate-symbol { color: var(--gate-x); }
+    .circuit-cell[data-gate="Y"]    .gate-symbol { color: var(--gate-y); }
+    .circuit-cell[data-gate="Z"]    .gate-symbol { color: var(--gate-z); }
+    .circuit-cell[data-gate="CNOT"] .gate-symbol { color: var(--gate-cnot); }
+
+    /* CNOT连接点标记 */
+    .circuit-cell .cnot-target {
+      display: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--gate-cnot);
+      pointer-events: none;
+    }
+    .circuit-cell[data-gate="CNOT"][data-cnot-role="target"] .gate-symbol { display: none; }
+    .circuit-cell[data-gate="CNOT"][data-cnot-role="target"] .cnot-target { display: block; }
+    .circuit-cell[data-gate="CNOT"][data-cnot-role="control"] .gate-symbol { font-size: 12px; }
+    /* 控制点实心圆 */
+    .circuit-cell .cnot-control {
+      display: none;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--gate-cnot);
+      pointer-events: none;
+    }
+    .circuit-cell[data-gate="CNOT"][data-cnot-role="control"] .gate-symbol { display: none; }
+    .circuit-cell[data-gate="CNOT"][data-cnot-role="control"] .cnot-control { display: block; }
+
+    /* ============================================================
+       右侧量子态分析面板 #info-panel
+       ============================================================ */
+    #info-panel {
+      grid-area: infopanel;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 16px 14px;
+      background: var(--bg-card);
+      border-left: 1px solid var(--border-color);
+      overflow-y: auto;
+    }
+
+    #info-panel .panel-section {
+      background: var(--bg-cell);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    #info-panel .section-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    /* 关卡信息（右侧面板顶部） */
+    #level-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #level-badge {
+      display: inline-block;
+      background: var(--gate-h);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    #level-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* 关卡目标（右侧面板底部，可滚动） */
+    #level-goal-description {
+      font-size: 13px;
+      color: var(--text-secondary);
+      max-height: 80px;
+      overflow-y: auto;
+      padding-right: 4px;
+      line-height: 1.6;
+    }
+    #level-goal-description::-webkit-scrollbar {
+      width: 4px;
+    }
+    #level-goal-description::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 2px;
+    }
+
+    /* 态向量显示 */
+    #state-vector-display {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 13px;
+      color: var(--text-secondary);
+      min-height: 60px;
+      line-height: 1.8;
+    }
+    #state-vector-display .placeholder-text {
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    /* 概率条形图 */
+    .prob-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .prob-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .prob-bar-row .basis-label {
+      width: 32px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-align: right;
+      font-family: 'Consolas', monospace;
+    }
+    .prob-bar-row .bar-track {
+      flex: 1;
+      height: 14px;
+      background: #111122;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .prob-bar-row .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--accent-info);
+      width: 0%; /* 初始0%，JS控制 */
+      transition: width 0.5s ease;
+    }
+    .prob-bar-row .bar-pct {
+      width: 36px;
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: right;
+    }
+
+    /* ============================================================
+       底部操作栏 #bottombar
+       ============================================================ */
+    #bottombar {
+      grid-area: bottombar;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-color);
+      gap: 16px;
+    }
+
+    #bottombar .bar-left {
+      display: flex;
+      gap: 10px;
+    }
+
+    #bottombar .bar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-run {
+      padding: 8px 28px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent-run);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background 0.2s;
+    }
+    .btn-run:hover {
+      background: var(--accent-run-hover);
+    }
+
+    .btn-add-col {
+      padding: 8px 18px;
+      border: 1px dashed var(--border-active);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--accent-add);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-add-col:hover {
+      background: rgba(52, 152, 219, 0.1);
+      border-style: solid;
+    }
+
+    /* 关卡状态图标（底部栏） */
+    #level-goal-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: var(--bg-cell);
+      border: 1px solid var(--border-color);
+      font-size: 20px;
+      min-width: 42px;
+      min-height: 38px;
+    }
+
+    /* ============================================================
+       模态窗口占位
+       ============================================================ */
+    .modal-overlay {
+      display: none; /* 初始隐藏，JS控制 */
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-dialog {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      min-width: 360px;
+      max-width: 520px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+    }
+    /* 量子基础弹窗更宽，防止tab文字折行 */
+    #modal-basics .modal-dialog {
+      max-width: 600px;
+    }
+
+    .modal-dialog .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .modal-dialog .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .modal-dialog .modal-close {
+      width: 30px;
+      height: 30px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 20px;
+      cursor: pointer;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-dialog .modal-close:hover {
+      background: var(--bg-cell);
+      color: var(--text-primary);
+    }
+    .modal-dialog .modal-body {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .modal-dialog .modal-body .placeholder-text {
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    /* KaTeX 渲染后的公式微调 */
+    .modal-body .katex-display {
+      margin: 0.5em 0;
+    }
+    .modal-body .katex {
+      font-size: 1.05em;
+    }
+
+    /* 关卡介绍弹窗按钮 */
+    #btn-start-level {
+      padding: 10px 36px;
+      border: none;
+      border-radius: 8px;
+      background: #2ecc71;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #btn-start-level:hover {
+      background: #27ae60;
+    }
+
+    /* ============================================================
+       响应式：窗口宽度 < 768px
+       ============================================================ */
+    @media (max-width: 767px) {
+      #app-container {
+        grid-template-columns: 1fr 220px;
+        grid-template-rows: auto 1fr auto auto;
+        grid-template-areas:
+          "topbar    topbar"
+          "circgrid  infopanel"
+          "gatepanel gatepanel"
+          "bottombar bottombar";
+      }
+
+      /* 门面板横向排列 */
+      #gate-panel {
+        grid-area: gatepanel;
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px;
+        border-right: none;
+        border-top: 1px solid var(--border-color);
+        overflow-y: visible;
+      }
+      #gate-panel .panel-label {
+        display: none;
+      }
+      #gate-panel .spacer {
+        display: none;
+      }
+      .gate-btn {
+        width: 42px;
+        height: 42px;
+        font-size: 14px;
+      }
+
+      /* 网格区域水平可滚动 */
+      #circuit-area {
+        min-width: 0;
+      }
+
+      /* 信息面板缩窄 */
+      #info-panel {
+        min-width: 0;
+        font-size: 12px;
+      }
+
+      /* 单元格缩小 */
+      :root {
+        --cell-size: 44px;
+      }
+
+      #topbar .game-title {
+        font-size: 17px;
+      }
+      #topbar .btn-topbar {
+        padding: 3px 7px;
+        font-size: 11px;
+      }
+      #topbar .topbar-actions {
+        gap: 3px;
+        flex-wrap: wrap;
+      }
+
+      #bottombar {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      #level-goal-description {
+        max-height: 60px;
+      }
+    }
+  
+  </style>
+</head>
+<body>
+
+
+  <!-- ============================================================
+       应用主容器
+       ============================================================ -->
+  <div id="app-container">
+
+    <!-- ==========================================================
+         顶部标题栏 #topbar
+         ========================================================== -->
+    <header id="topbar">
+      <h1 class="game-title">Turing Quamplete</h1>
+      <nav class="topbar-actions">
+        <button id="btn-help"    class="btn-topbar" title="游戏玩法介绍">❓ 玩法</button>
+        <button id="btn-basics"  class="btn-topbar" title="学习量子计算基础知识">📚 量子基础</button>
+        <button id="btn-gallery" class="btn-topbar" title="查看所有量子门详解">📖 量子门图鉴</button>
+        <button id="btn-levels"  class="btn-topbar" title="选择关卡">🗺️ 选关</button>
+        <button id="btn-hint"    class="btn-topbar" title="获取当前关卡提示">💡 提示</button>
+        <button id="btn-reset"          class="btn-topbar" title="重置当前关卡">🔄 重置关卡</button>
+        <button id="btn-reset-progress" class="btn-topbar" title="清除所有进度，从头开始" style="font-size:11px;opacity:0.5;">🗑️ 重置进度</button>
+      </nav>
+    </header>
+
+    <!-- ==========================================================
+         左侧量子门面板 #gate-panel
+         ========================================================== -->
+    <aside id="gate-panel">
+      <span class="panel-label">量子门</span>
+
+      <button class="gate-btn" data-gate="H" title="Hadamard门 — 创建叠加态">
+        H<span class="shortcut">1</span>
+      </button>
+      <button class="gate-btn" data-gate="X" title="Pauli-X门 — 量子NOT">
+        X<span class="shortcut">2</span>
+      </button>
+      <button class="gate-btn" data-gate="Y" title="Pauli-Y门">
+        Y<span class="shortcut">3</span>
+      </button>
+      <button class="gate-btn" data-gate="Z" title="Pauli-Z门 — 相位翻转">
+        Z<span class="shortcut">4</span>
+      </button>
+      <button class="gate-btn" data-gate="S" title="S门（相位门）— π/2 相位旋转">
+        S<span class="shortcut">5</span>
+      </button>
+      <button class="gate-btn" data-gate="CNOT" title="受控非门 — 双量子比特纠缠">
+        CNOT<span class="shortcut">6</span>
+      </button>
+
+      <div class="spacer"></div>
+
+      <button class="gate-btn" data-gate="ERASE" title="擦除单元格中的门">
+        ⌫<span class="shortcut">Del</span>
+      </button>
+    </aside>
+
+    <!-- ==========================================================
+         中央电路网格 #circuit-area
+         ========================================================== -->
+    <main id="circuit-area">
+      <div class="circuit-title">量子电路</div>
+      <div class="circuit-scroll">
+        <div class="circuit-grid" id="circuit-grid">
+
+          <!-- 量子比特标签 (列1固定) -->
+          <span class="qubit-label q0">q₀</span>
+          <span class="qubit-label q1">q₁</span>
+
+          <!-- 时间步序号行 (行1，列2-9) -->
+          <span class="timestep-label" style="grid-row:1; grid-column:2;">t₀</span>
+          <span class="timestep-label" style="grid-row:1; grid-column:3;">t₁</span>
+          <span class="timestep-label" style="grid-row:1; grid-column:4;">t₂</span>
+          <span class="timestep-label" style="grid-row:1; grid-column:5;">t₃</span>
+          <span class="timestep-label" style="grid-row:1; grid-column:6;">t₄</span>
+          <span class="timestep-label" style="grid-row:1; grid-column:7;">t₅</span>
+          <span class="timestep-label" style="grid-row:1; grid-column:8;">t₆</span>
+          <span class="timestep-label" style="grid-row:1; grid-column:9;">t₇</span>
+
+          <!-- q₀ 行单元格 (行2，列2-9) -->
+          <div class="circuit-cell" data-col="0" data-qubit="0" style="grid-row:2; grid-column:2;"></div>
+          <div class="circuit-cell" data-col="1" data-qubit="0" style="grid-row:2; grid-column:3;"></div>
+          <div class="circuit-cell" data-col="2" data-qubit="0" style="grid-row:2; grid-column:4;"></div>
+          <div class="circuit-cell" data-col="3" data-qubit="0" style="grid-row:2; grid-column:5;"></div>
+          <div class="circuit-cell" data-col="4" data-qubit="0" style="grid-row:2; grid-column:6;"></div>
+          <div class="circuit-cell" data-col="5" data-qubit="0" style="grid-row:2; grid-column:7;"></div>
+          <div class="circuit-cell" data-col="6" data-qubit="0" style="grid-row:2; grid-column:8;"></div>
+          <div class="circuit-cell" data-col="7" data-qubit="0" style="grid-row:2; grid-column:9;"></div>
+
+          <!-- q₁ 行单元格 (行3，列2-9) -->
+          <div class="circuit-cell" data-col="0" data-qubit="1" style="grid-row:3; grid-column:2;"></div>
+          <div class="circuit-cell" data-col="1" data-qubit="1" style="grid-row:3; grid-column:3;"></div>
+          <div class="circuit-cell" data-col="2" data-qubit="1" style="grid-row:3; grid-column:4;"></div>
+          <div class="circuit-cell" data-col="3" data-qubit="1" style="grid-row:3; grid-column:5;"></div>
+          <div class="circuit-cell" data-col="4" data-qubit="1" style="grid-row:3; grid-column:6;"></div>
+          <div class="circuit-cell" data-col="5" data-qubit="1" style="grid-row:3; grid-column:7;"></div>
+          <div class="circuit-cell" data-col="6" data-qubit="1" style="grid-row:3; grid-column:8;"></div>
+          <div class="circuit-cell" data-col="7" data-qubit="1" style="grid-row:3; grid-column:9;"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ==========================================================
+         右侧量子态分析面板 #info-panel
+         ========================================================== -->
+    <aside id="info-panel">
+
+      <!-- 关卡信息 -->
+      <section class="panel-section" id="level-info-section">
+        <div id="level-info">
+          <span id="level-badge">第 1 关</span>
+          <span id="level-name">叠加态</span>
+        </div>
+      </section>
+
+      <!-- 态向量显示 -->
+      <section class="panel-section" id="state-vector-section">
+        <div class="section-title">态向量 |ψ⟩</div>
+        <div id="state-vector-display">
+          <span class="placeholder-text">|ψ⟩ = 1.00|00⟩ + 0.00|01⟩ + 0.00|10⟩ + 0.00|11⟩</span>
+        </div>
+      </section>
+
+      <!-- 概率条形图 -->
+      <section class="panel-section" id="probability-section">
+        <div class="section-title">测量概率</div>
+        <div class="prob-bars">
+          <div class="prob-bar-row" data-basis="00">
+            <span class="basis-label">|00⟩</span>
+            <div class="bar-track"><div class="bar-fill" id="bar-00" style="width:100%"></div></div>
+            <span class="bar-pct" id="pct-00">100%</span>
+          </div>
+          <div class="prob-bar-row" data-basis="01">
+            <span class="basis-label">|01⟩</span>
+            <div class="bar-track"><div class="bar-fill" id="bar-01" style="width:0%"></div></div>
+            <span class="bar-pct" id="pct-01">0%</span>
+          </div>
+          <div class="prob-bar-row" data-basis="10">
+            <span class="basis-label">|10⟩</span>
+            <div class="bar-track"><div class="bar-fill" id="bar-10" style="width:0%"></div></div>
+            <span class="bar-pct" id="pct-10">0%</span>
+          </div>
+          <div class="prob-bar-row" data-basis="11">
+            <span class="basis-label">|11⟩</span>
+            <div class="bar-track"><div class="bar-fill" id="bar-11" style="width:0%"></div></div>
+            <span class="bar-pct" id="pct-11">0%</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 关卡目标 -->
+      <section class="panel-section" id="level-goal-section">
+        <div class="section-title">🎯 关卡目标</div>
+        <div id="level-goal-description">目标描述将在此显示。</div>
+      </section>
+
+      <!-- 快捷键参考 -->
+      <section class="panel-section" id="shortcuts-section">
+        <div class="section-title">⌨️ 快捷键</div>
+        <div id="shortcuts-content" style="font-size:11px;color:var(--text-dim);line-height:1.7;">
+          1-6 选门 | Enter 运行 | C 清除 | Esc 取消 | 右键 删除
+        </div>
+      </section>
+    </aside>
+
+    <!-- ==========================================================
+         底部操作栏 #bottombar
+         ========================================================== -->
+    <footer id="bottombar">
+      <div class="bar-left">
+        <button id="btn-run" class="btn-run" title="运行当前电路">▶ 运行电路</button>
+        <button id="btn-add-col" class="btn-add-col" title="在末尾添加一列">+ 添加列</button>
+      </div>
+      <div class="bar-right">
+        <div id="level-goal-card">
+          <span id="goal-status-icon">🎯</span>
+        </div>
+      </div>
+    </footer>
+
+  </div><!-- /#app-container -->
+
+  <!-- ============================================================
+       模态窗口占位
+       ============================================================ -->
+
+  <!-- 关卡介绍弹窗 -->
+  <div class="modal-overlay" id="modal-level-intro">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2 class="modal-title">⚛️ 新量子门解锁</h2>
+        <button class="modal-close" data-close="modal-level-intro">&times;</button>
+      </div>
+      <div class="modal-body" id="level-intro-body">
+        <!-- 由 level-manager.js 动态填充 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 量子基础弹窗 -->
+  <div class="modal-overlay" id="modal-basics">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2 class="modal-title">📚 量子计算基础</h2>
+        <button class="modal-close" data-close="modal-basics">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- 由 app.js 动态填充：tab按钮 + 页面内容 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 图鉴弹窗 -->
+  <div class="modal-overlay" id="modal-gallery">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2 class="modal-title">📖 量子门图鉴</h2>
+        <button class="modal-close" data-close="modal-gallery">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="placeholder-text">量子门图鉴内容将由JavaScript动态填充。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 教学引导弹窗 -->
+  <div class="modal-overlay" id="modal-tutorial">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2 class="modal-title">🎓 教学引导</h2>
+        <button class="modal-close" data-close="modal-tutorial">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="placeholder-text">教学引导内容将由JavaScript动态填充。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 重置进度确认弹窗 -->
+  <div class="modal-overlay" id="modal-reset-confirm">
+    <div class="modal-dialog" style="max-width:420px;">
+      <div class="modal-header">
+        <h2 class="modal-title">⚠️ 重置所有进度</h2>
+        <button class="modal-close" data-close="modal-reset-confirm">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:#e74c3c;font-weight:600;margin-bottom:12px;">此操作将不可撤销地清除以下数据：</p>
+        <ul style="color:#ccc;margin-left:16px;line-height:1.8;">
+          <li>关卡进度（回到第 1 关）</li>
+          <li>已完成关卡记录</li>
+          <li>引导弹窗已读状态（重新显示）</li>
+          <li>关卡介绍弹窗已读状态（重新显示）</li>
+        </ul>
+        <p style="color:#f39c12;margin-top:12px;">确定要重置吗？</p>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+          <button id="btn-cancel-reset" style="padding:8px 20px;border:1px solid #444;border-radius:6px;background:transparent;color:#ccc;cursor:pointer;">取消</button>
+          <button id="btn-confirm-reset" style="padding:8px 20px;border:none;border-radius:6px;background:#e74c3c;color:#fff;cursor:pointer;font-weight:600;">确认重置</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 通关庆祝弹窗 -->
+  <div class="modal-overlay" id="modal-completion">
+    <div class="modal-dialog" style="text-align:center;">
+      <div class="modal-header">
+        <h2 class="modal-title">🎉 恭喜通关！</h2>
+        <button class="modal-close" data-close="modal-completion">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:48px;margin:12px 0;">🏆</p>
+        <p style="color:#f1c40f;font-size:16px;font-weight:600;">你已完成 Turing Quamplete 全部 8 个关卡！</p>
+        <p style="color:#aaa;margin-top:8px;">从叠加态到相位操控，你已经掌握了双量子比特电路的核心概念。</p>
+        <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <button id="btn-restart-level1" style="padding:10px 28px;border:none;border-radius:8px;background:#2ecc71;color:#fff;font-weight:600;cursor:pointer;font-size:15px;">🔄 返回第一关</button>
+          <button id="btn-replay-any" style="padding:10px 28px;border:1px solid #444;border-radius:8px;background:transparent;color:#ccc;cursor:pointer;font-size:15px;">🗺️ 自由选关</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 关卡选择弹窗 -->
+  <div class="modal-overlay" id="modal-level-select">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2 class="modal-title">🗺️ 选择关卡</h2>
+        <button class="modal-close" data-close="modal-level-select">&times;</button>
+      </div>
+      <div class="modal-body" id="level-select-body">
+        <!-- 由 app.js 动态填充关卡按钮 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 提示弹窗 -->
+  <div class="modal-overlay" id="modal-hint">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2 class="modal-title">💡 提示</h2>
+        <button class="modal-close" data-close="modal-hint">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="placeholder-text">关卡提示内容将由JavaScript动态填充。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       第2-6部分：JavaScript 模块（按依赖顺序加载）
+       ============================================================ -->
+  
+  <script>
+// ============================================================
+// 第2部分：量子模拟引擎 — QuantumSimulator
+// 纯JavaScript模块，负责双量子比特系统的底层计算。
+// 无DOM依赖，所有方法均为静态方法，独立可测试。
+// ============================================================
+
+const QuantumSimulator = (function () {
+  'use strict';
+
+  // ==========================================================
+  //  1. 复数运算工具
+  // ==========================================================
+
+  /** 复数加法: (a+bi) + (c+di) = (a+c) + (b+d)i */
+  function cAdd(a, b) {
+    return { re: a.re + b.re, im: a.im + b.im };
+  }
+
+  /** 复数减法: (a+bi) - (c+di) = (a-c) + (b-d)i */
+  function cSub(a, b) {
+    return { re: a.re - b.re, im: a.im - b.im };
+  }
+
+  /** 复数乘法: (a+bi)(c+di) = (ac-bd) + (ad+bc)i */
+  function cMul(a, b) {
+    return {
+      re: a.re * b.re - a.im * b.im,
+      im: a.re * b.im + a.im * b.re
+    };
+  }
+
+  /** 标量与复数相乘 */
+  function cScale(scalar, c) {
+    return { re: scalar * c.re, im: scalar * c.im };
+  }
+
+  /** 复数模平方: |a+bi|² = a² + b² */
+  function cModSq(c) {
+    return c.re * c.re + c.im * c.im;
+  }
+
+  /** 复数共轭: (a+bi)* = a - bi */
+  function cConj(c) {
+    return { re: c.re, im: -c.im };
+  }
+
+  /** 创建一个复数 */
+  function c(re, im) {
+    return { re: re, im: im || 0 };
+  }
+
+  // ==========================================================
+  //  2. 向量运算工具
+  // ==========================================================
+
+  /**
+   * 向量内积 ⟨u|v⟩ = Σ uᵢ* · vᵢ
+   * 返回复数结果
+   */
+  function innerProduct(u, v) {
+    let result = c(0, 0);
+    for (let i = 0; i < u.length; i++) {
+      result = cAdd(result, cMul(cConj(u[i]), v[i]));
+    }
+    return result;
+  }
+
+  /**
+   * 向量范数平方 ||v||² = Σ |vᵢ|²（即 ⟨v|v⟩）
+   */
+  function normSq(v) {
+    let sum = 0;
+    for (let i = 0; i < v.length; i++) {
+      sum += cModSq(v[i]);
+    }
+    return sum;
+  }
+
+  /**
+   * 归一化：将态向量除以其范数，使其满足 Σ|αᵢ|² = 1
+   * 返回新向量，不修改原向量
+   */
+  function normalize(v) {
+    const n = Math.sqrt(normSq(v));
+    if (n === 0) return v.map(function (x) { return c(0, 0); });
+    const inv = 1 / n;
+    return v.map(function (x) { return cScale(inv, x); });
+  }
+
+  // ==========================================================
+  //  3. 量子门矩阵定义
+  //     所有矩阵元素均为 {re, im} 复数对象
+  // ==========================================================
+
+  // 单位矩阵 I（2x2）
+  const I2 = [
+    [c(1, 0), c(0, 0)],
+    [c(0, 0), c(1, 0)]
+  ];
+
+  // Hadamard门: 1/√2 * [[1, 1], [1, -1]]
+  // 将|0⟩变为(|0⟩+|1⟩)/√2，|1⟩变为(|0⟩-|1⟩)/√2
+  const invSqrt2 = 1 / Math.sqrt(2);
+  const GATE_H = [
+    [c(invSqrt2, 0), c(invSqrt2, 0)],
+    [c(invSqrt2, 0), c(-invSqrt2, 0)]
+  ];
+
+  // Pauli-X门（量子NOT）: [[0, 1], [1, 0]]
+  // 翻转|0⟩↔|1⟩
+  const GATE_X = [
+    [c(0, 0), c(1, 0)],
+    [c(1, 0), c(0, 0)]
+  ];
+
+  // Pauli-Y门: [[0, -i], [i, 0]]
+  const GATE_Y = [
+    [c(0, 0), c(0, -1)],
+    [c(0, 1), c(0, 0)]
+  ];
+
+  // Pauli-Z门: [[1, 0], [0, -1]]
+  // 相位翻转：|0⟩不变，|1⟩→ -|1⟩
+  const GATE_Z = [
+    [c(1, 0), c(0, 0)],
+    [c(0, 0), c(-1, 0)]
+  ];
+
+  // S门（相位门）: [[1, 0], [0, i]]
+  // |0⟩不变，|1⟩→ i|1⟩（π/2相位旋转）
+  const GATE_S = [
+    [c(1, 0), c(0, 0)],
+    [c(0, 0), c(0, 1)]
+  ];
+
+  /**
+   * CNOT门（4x4），控制位=第0量子比特（高位），目标位=第1量子比特（低位）
+   * 矩阵形式:
+   *   |1 0 0 0|   |00⟩→|00⟩
+   *   |0 1 0 0|   |01⟩→|01⟩
+   *   |0 0 0 1|   |10⟩→|11⟩ (控制=1时翻转目标)
+   *   |0 0 1 0|   |11⟩→|10⟩
+   *
+   * 基矢顺序: |00⟩, |01⟩, |10⟩, |11⟩
+   */
+  const CNOT_MATRIX = [
+    [c(1, 0), c(0, 0), c(0, 0), c(0, 0)],
+    [c(0, 0), c(1, 0), c(0, 0), c(0, 0)],
+    [c(0, 0), c(0, 0), c(0, 0), c(1, 0)],
+    [c(0, 0), c(0, 0), c(1, 0), c(0, 0)]
+  ];
+
+  /**
+   * CNOT门（4x4），控制位=第1量子比特（低位），目标位=第0量子比特（高位）
+   * 矩阵形式:
+   *   |1 0 0 0|   |00⟩→|00⟩
+   *   |0 0 0 1|   |01⟩→|11⟩ (控制=1时翻转目标)
+   *   |0 0 1 0|   |10⟩→|10⟩
+   *   |0 1 0 0|   |11⟩→|01⟩
+   */
+  const CNOT_REVERSED_MATRIX = [
+    [c(1, 0), c(0, 0), c(0, 0), c(0, 0)],
+    [c(0, 0), c(0, 0), c(0, 0), c(1, 0)],
+    [c(0, 0), c(0, 0), c(1, 0), c(0, 0)],
+    [c(0, 0), c(1, 0), c(0, 0), c(0, 0)]
+  ];
+
+  // 门名称 → 2x2矩阵映射表
+  var GATE_MAP = {
+    'H': GATE_H,
+    'X': GATE_X,
+    'Y': GATE_Y,
+    'Z': GATE_Z,
+    'S': GATE_S
+  };
+
+  // ==========================================================
+  //  4. 4x4 矩阵 × 4维向量 乘法
+  //     用于CNOT等完整双量子比特操作
+  // ==========================================================
+
+  /**
+   * 将4x4复数矩阵作用于4维态向量，返回新向量
+   * @param {Array<Array<Object>>} matrix - 4x4 复数矩阵
+   * @param {Array<Object>} vec - 4维复数态向量
+   * @returns {Array<Object>} 新态向量
+   */
+  function applyMatrix4(matrix, vec) {
+    var result = [c(0, 0), c(0, 0), c(0, 0), c(0, 0)];
+    for (var row = 0; row < 4; row++) {
+      var sum = c(0, 0);
+      for (var col = 0; col < 4; col++) {
+        sum = cAdd(sum, cMul(matrix[row][col], vec[col]));
+      }
+      result[row] = sum;
+    }
+    return result;
+  }
+
+  // ==========================================================
+  //  5. 态向量初始化与演化
+  // ==========================================================
+
+  /**
+   * 获取初始态 |00⟩
+   * 4维向量: [1, 0, 0, 0]ᵀ
+   * 对应: |ψ⟩ = 1·|00⟩ + 0·|01⟩ + 0·|10⟩ + 0·|11⟩
+   */
+  function getInitialState() {
+    return [c(1, 0), c(0, 0), c(0, 0), c(0, 0)];
+  }
+
+  /**
+   * 对指定量子比特作用单比特门
+   *
+   * 原理说明（以qubitIndex=0为例）:
+   *   - 总的4x4操作为 G ⊗ I₂（门G张量积单位矩阵）
+   *   - 基矢索引: |q₀ q₁⟩ = |0⟩→索引0,1; |10⟩→索引2,3
+   *   - 对于qubit0（高位），门G作用于索引的高位比特:
+   *       new[0b0q₁] = G₀₀·old[0b0q₁] + G₀₁·old[0b1q₁]
+   *       new[0b1q₁] = G₁₀·old[0b0q₁] + G₁₁·old[0b1q₁]
+   *
+   * @param {Array<Array<Object>>} gate - 2x2 复数矩阵
+   * @param {number} qubit - 目标量子比特 (0=高位/q₀, 1=低位/q₁)
+   * @param {Array<Object>} state - 4维态向量
+   * @returns {Array<Object>} 新态向量
+   */
+  function applySingleQubitGate(gate, qubit, state) {
+    if (qubit === 0) {
+      // G ⊗ I₂: 门作用在qubit₀（高位）
+      // 高位比特=0 → 索引0,1; 高位比特=1 → 索引2,3
+      return [
+        cAdd(cMul(gate[0][0], state[0]), cMul(gate[0][1], state[2])), // |00⟩: G₀₀|00⟩ + G₀₁|10⟩
+        cAdd(cMul(gate[0][0], state[1]), cMul(gate[0][1], state[3])), // |01⟩: G₀₀|01⟩ + G₀₁|11⟩
+        cAdd(cMul(gate[1][0], state[0]), cMul(gate[1][1], state[2])), // |10⟩: G₁₀|00⟩ + G₁₁|10⟩
+        cAdd(cMul(gate[1][0], state[1]), cMul(gate[1][1], state[3]))  // |11⟩: G₁₀|01⟩ + G₁₁|11⟩
+      ];
+    } else {
+      // I₂ ⊗ G: 门作用在qubit₁（低位）
+      // 低位比特=0 → 索引0,2; 低位比特=1 → 索引1,3
+      return [
+        cAdd(cMul(gate[0][0], state[0]), cMul(gate[0][1], state[1])), // |00⟩: G₀₀|00⟩ + G₀₁|01⟩
+        cAdd(cMul(gate[1][0], state[0]), cMul(gate[1][1], state[1])), // |01⟩: G₁₀|00⟩ + G₁₁|01⟩
+        cAdd(cMul(gate[0][0], state[2]), cMul(gate[0][1], state[3])), // |10⟩: G₀₀|10⟩ + G₀₁|11⟩
+        cAdd(cMul(gate[1][0], state[2]), cMul(gate[1][1], state[3]))  // |11⟩: G₁₀|10⟩ + G₁₁|11⟩
+      ];
+    }
+  }
+
+  /**
+   * 作用CNOT门
+   *
+   * @param {number} control - 控制量子比特 (0=q₀高位, 1=q₁低位)
+   * @param {Array<Object>} state - 4维态向量
+   * @returns {Array<Object>} 新态向量
+   */
+  function applyCNOT(control, state) {
+    if (control === 0) {
+      // 控制=q₀(高位), 目标=q₁(低位)
+      // 当高位=1时翻转低位 → 索引2↔3交换
+      return [
+        state[0],  // |00⟩ → |00⟩
+        state[1],  // |01⟩ → |01⟩
+        state[3],  // |10⟩ → |11⟩ (翻转低位)
+        state[2]   // |11⟩ → |10⟩ (翻转低位)
+      ];
+    } else {
+      // 控制=q₁(低位), 目标=q₀(高位)
+      // 当低位=1时翻转高位 → 索引1↔3交换
+      return [
+        state[0],  // |00⟩ → |00⟩
+        state[3],  // |01⟩ → |11⟩ (翻转高位)
+        state[2],  // |10⟩ → |10⟩
+        state[1]   // |11⟩ → |01⟩ (翻转高位)
+      ];
+    }
+  }
+
+  /**
+   * 对整个列（时间步）应用门操作
+   *
+   * 规则:
+   *  - 若 columnGates.cnot === true，则仅作用CNOT（与单比特门互斥）
+   *    columnGates.control 指定控制位（默认0）
+   *  - 否则对 columnGates 中每个 qubitIndex → gateName 依次作用单比特门
+   *    两个单比特门作用在不同量子比特上，相互对易，因此顺序无关
+   *
+   * @param {Object} columnGates - 列门配置
+   *   示例: {0: 'H', 1: 'X'} — q₀作用H门，q₁作用X门（并行）
+   *   示例: {cnot: true, control: 0} — 作用CNOT，q₀为控制位
+   *   示例: {cnot: true} — 等同于 {cnot: true, control: 0}
+   * @param {Array<Object>} state - 当前态向量
+   * @returns {Array<Object>} 演化后的新态向量
+   */
+  function applyColumn(columnGates, state) {
+    var newState = state.slice(); // 浅拷贝复数对象引用（不可变，安全）
+
+    if (columnGates.cnot === true) {
+      // CNOT模式：控制位默认q₀
+      var ctrl = (columnGates.control !== undefined) ? columnGates.control : 0;
+      newState = applyCNOT(ctrl, newState);
+    } else {
+      // 单比特门模式：遍历配置中的每个量子比特
+      for (var q in columnGates) {
+        if (columnGates.hasOwnProperty(q)) {
+          var qubitIndex = parseInt(q, 10);
+          if (isNaN(qubitIndex)) continue; // 跳过非数字键（如 'cnot'）
+          var gateName = columnGates[q];
+          var gateMatrix = GATE_MAP[gateName];
+          if (gateMatrix) {
+            newState = applySingleQubitGate(gateMatrix, qubitIndex, newState);
+          }
+        }
+      }
+    }
+
+    return newState;
+  }
+
+  // ==========================================================
+  //  6. 测量与态向量显示
+  // ==========================================================
+
+  /**
+   * 计算4个基矢的测量概率
+   *
+   * 根据玻恩规则，测量得到基矢|ij⟩的概率为 |⟨ij|ψ⟩|² = |αᵢⱼ|²
+   * 基矢顺序: |00⟩, |01⟩, |10⟩, |11⟩
+   *
+   * @param {Array<Object>} state - 态向量 [α₀₀, α₀₁, α₁₀, α₁₁]
+   * @returns {Array<number>} 概率数组 [p00, p01, p10, p11]，和为1
+   */
+  function getProbabilities(state) {
+    var probs = [
+      cModSq(state[0]), // |00⟩
+      cModSq(state[1]), // |01⟩
+      cModSq(state[2]), // |10⟩
+      cModSq(state[3])  // |11⟩
+    ];
+
+    // 数值修正：将极小负数或1+ε截断到[0,1]
+    // 浮点舍入可能导致 1.0000000001 或 -1e-16
+    var eps = 1e-12;
+    for (var i = 0; i < 4; i++) {
+      if (probs[i] < 0 && probs[i] > -eps) probs[i] = 0;
+      if (probs[i] > 1 && probs[i] < 1 + eps) probs[i] = 1;
+    }
+
+    return probs;
+  }
+
+  /**
+   * 将态向量格式化为可读字符串
+   *
+   * 输出示例:
+   *   "1.000|00⟩"
+   *   "0.707|00⟩ + 0.707|11⟩"
+   *   "0.500|00⟩ + 0.500|01⟩ + 0.500|10⟩ + 0.500|11⟩"
+   *
+   * 规则:
+   *  - 忽略幅度趋近于0的项（阈值1e-10）
+   *  - 复数以极简形式显示："0.707" 或 "0.707i" 或 "0.500+0.500i"
+   *  - 各项按 |00⟩→|01⟩→|10⟩→|11⟩ 顺序排列
+   *
+   * @param {Array<Object>} state - 态向量
+   * @returns {string}
+   */
+  function stateToString(state) {
+    var basisLabels = ['00', '01', '10', '11'];
+    var parts = [];
+    var eps = 1e-10;
+
+    for (var i = 0; i < 4; i++) {
+      var amp = state[i];
+      var magSq = cModSq(amp);
+      if (magSq < eps) continue; // 忽略零幅度项
+
+      var ampStr = formatComplex(amp);
+      parts.push(ampStr + '|' + basisLabels[i] + '⟩');
+    }
+
+    if (parts.length === 0) {
+      return '0';
+    }
+
+    return parts.join(' + ');
+  }
+
+  /**
+   * 将复数格式化为字符串，省略多余的0和1
+   * 示例: {re:0.707, im:0} → "0.707"
+   *       {re:0, im:-0.707} → "-0.707i"
+   *       {re:0.5, im:0.5} → "0.500+0.500i"
+   */
+  function formatComplex(c) {
+    var re = c.re;
+    var im = c.im;
+    var eps = 1e-10;
+
+    // 实部和虚部都非常小 → "0"
+    if (Math.abs(re) < eps && Math.abs(im) < eps) return '0';
+
+    var reStr = '';
+    var imStr = '';
+
+    // 格式化实部
+    if (Math.abs(re) >= eps) {
+      reStr = re.toFixed(3);
+    }
+
+    // 格式化虚部
+    if (Math.abs(im) >= eps) {
+      var absIm = Math.abs(im);
+      var sign = im > 0 ? '+' : '-';
+      var val = absIm.toFixed(3);
+
+      // 去掉 "1.000i" 中的 "1.000" → 简化为 "i" 或 "-i"
+      if (Math.abs(absIm - 1) < eps) {
+        imStr = sign + 'i';
+      } else {
+        imStr = sign + val + 'i';
+      }
+    }
+
+    // 纯实数
+    if (imStr === '') return (reStr === '' ? '0' : reStr);
+
+    // 纯虚数
+    if (reStr === '') {
+      // 去掉开头的 "+"（如 "+i" → "i"）
+      if (imStr.charAt(0) === '+') return imStr.substring(1);
+      return imStr;
+    }
+
+    return reStr + imStr;
+  }
+
+  // ==========================================================
+  //  7. 公开API
+  // ==========================================================
+
+  return {
+    // 复数工具
+    c: c,
+    cAdd: cAdd,
+    cSub: cSub,
+    cMul: cMul,
+    cScale: cScale,
+    cModSq: cModSq,
+    cConj: cConj,
+
+    // 向量工具
+    innerProduct: innerProduct,
+    normSq: normSq,
+    normalize: normalize,
+
+    // 门矩阵
+    GATE_I2: I2,
+    GATE_H: GATE_H,
+    GATE_X: GATE_X,
+    GATE_Y: GATE_Y,
+    GATE_Z: GATE_Z,
+    GATE_S: GATE_S,
+    CNOT_MATRIX: CNOT_MATRIX,
+    CNOT_REVERSED_MATRIX: CNOT_REVERSED_MATRIX,
+    GATE_MAP: GATE_MAP,
+
+    // 态向量操作
+    getInitialState: getInitialState,
+    applySingleQubitGate: applySingleQubitGate,
+    applyCNOT: applyCNOT,
+    applyColumn: applyColumn,
+
+    // 测量与显示
+    getProbabilities: getProbabilities,
+    stateToString: stateToString,
+    formatComplex: formatComplex
+  };
+
+})();
+
+// ============================================================
+// 第2部分结束，等待UI层（第3部分）调用
+// ============================================================
+
+  </script>
+  <script>
+// ============================================================
+// 第3部分：电路网格交互 — CircuitGrid
+// 负责量子门放置/删除、选择器状态、快捷键、视觉反馈。
+// 依赖：第1部分 HTML DOM 结构、第2部分 QuantumSimulator
+// ============================================================
+
+(function () {
+  'use strict';
+
+  // ==========================================================
+  //  动态注入本模块所需的 CSS 动画与样式
+  // ==========================================================
+  var styleSheet = document.createElement('style');
+  styleSheet.textContent = [
+    /* 门按钮选中态 */
+    '.gate-btn.selected {',
+    '  border-color: #ffffff !important;',
+    '  background: #2a2a5a !important;',
+    '  box-shadow: 0 0 16px rgba(255,255,255,0.25);',
+    '  transform: scale(1.06);',
+    '}',
+    /* 放置脉冲动画 */
+    '@keyframes pulse-glow {',
+    '  0%   { filter: brightness(1); transform: scale(1); }',
+    '  50%  { filter: brightness(2.2); transform: scale(1.08); }',
+    '  100% { filter: brightness(1); transform: scale(1); }',
+    '}',
+    '.circuit-cell.gate-placed {',
+    '  animation: pulse-glow 0.45s ease;',
+    '}',
+    /* 非法操作闪红 */
+    '@keyframes flash-red {',
+    '  0%   { border-color: #e74c3c; background: rgba(231,76,60,0.35); }',
+    '  100% { border-color: var(--border-color, #2a2a4a); background: var(--bg-cell, #1a1a2e); }',
+    '}',
+    '.circuit-cell.invalid-flash {',
+    '  animation: flash-red 0.4s ease;',
+    '}',
+    /* 门面板标签强调 */
+    '#gate-panel .selected-indicator {',
+    '  font-size: 11px;',
+    '  color: #fff;',
+    '  background: #2a2a5a;',
+    '  padding: 2px 8px;',
+    '  border-radius: 4px;',
+    '  text-align: center;',
+    '}'
+  ].join('\n');
+  document.head.appendChild(styleSheet);
+
+  // ==========================================================
+  //  内部状态
+  // ==========================================================
+
+  /** 当前选中的门类型: 'H'|'X'|'Y'|'Z'|'CNOT'|'ERASER'|null */
+  var selectedGate = null;
+
+  /**
+   * 电路数据: circuitData[col] 结构:
+   *   null              — 空列
+   *   {0: 'H'}          — q₀放置H门
+   *   {1: 'X'}          — q₁放置X门
+   *   {0: 'H', 1: 'X'}  — 两行并行放置
+   *   {cnot: true}      — 整列CNOT（控制=q₀, 目标=q₁）
+   */
+  var circuitData = [];
+
+  /** cellElements[col][qubit] = DOM元素，初始化时填充 */
+  var cellElements = [];
+
+  /** 当前网格列数（默认8） */
+  var numCols = 8;
+
+  /** 键盘快捷键序号 → 门名称的映射（跳过锁定门动态计算） */
+  var shortcutMap = [];
+
+  // ==========================================================
+  //  1. DOM 查询辅助
+  // ==========================================================
+
+  /** 根据col和qubit获取单元格DOM */
+  function getCell(col, qubit) {
+    return document.querySelector(
+      '.circuit-cell[data-col="' + col + '"][data-qubit="' + qubit + '"]'
+    );
+  }
+
+  /** 获取门面板按钮 */
+  function getGateBtn(gateName) {
+    return document.querySelector('.gate-btn[data-gate="' + gateName + '"]');
+  }
+
+  // ==========================================================
+  //  2. 选择器状态管理
+  // ==========================================================
+
+  /** 选中一个门，高亮对应面板按钮 */
+  function selectGate(gateName) {
+    // 再次点击同一门 → 取消选中
+    if (selectedGate === gateName) {
+      deselectGate();
+      return;
+    }
+
+    // 清除之前的选中态
+    deselectGateSilent();
+
+    selectedGate = gateName;
+    var btn = getGateBtn(gateName);
+    if (btn) {
+      btn.classList.add('selected');
+    }
+
+    updateSelectionIndicator();
+  }
+
+  /** 取消选中（清除按钮高亮） */
+  function deselectGate() {
+    deselectGateSilent();
+    updateSelectionIndicator();
+  }
+
+  /** 内部：清除高亮但不刷新指示器（供selectGate内部使用） */
+  function deselectGateSilent() {
+    if (selectedGate) {
+      var prevBtn = getGateBtn(selectedGate);
+      if (prevBtn) {
+        prevBtn.classList.remove('selected');
+      }
+    }
+    selectedGate = null;
+  }
+
+  /** 更新门面板底部的选中提示文字 */
+  function updateSelectionIndicator() {
+    var old = document.getElementById('selection-indicator');
+    if (old) old.remove();
+
+    if (selectedGate) {
+      var indicator = document.createElement('span');
+      indicator.id = 'selection-indicator';
+      indicator.className = 'selected-indicator';
+      indicator.textContent = '已选: ' + selectedGate + ' (ESC取消)';
+      var panel = document.getElementById('gate-panel');
+      if (panel) panel.appendChild(indicator);
+    }
+  }
+
+  /** 判断某个门按钮是否被锁定 */
+  function isGateLocked(gateName) {
+    var btn = getGateBtn(gateName);
+    return btn ? btn.classList.contains('locked') : false;
+  }
+
+  /** 重新构建快捷键映射表（门锁定状态变化后调用） */
+  function rebuildShortcutMap() {
+    shortcutMap = [];
+    // 按此顺序分配快捷键
+    var orderedGates = ['H', 'X', 'Y', 'Z', 'S', 'CNOT'];
+    for (var i = 0; i < orderedGates.length; i++) {
+      if (!isGateLocked(orderedGates[i])) {
+        shortcutMap.push(orderedGates[i]);
+      }
+    }
+  }
+
+  // ==========================================================
+  //  3. 单元格渲染（DOM更新）
+  // ==========================================================
+
+  /**
+   * 根据 circuitData 同步渲染单个单元格的样式和内容
+   * @param {number} col - 列索引
+   * @param {number} qubit - 行 (0=q₀, 1=q₁)
+   */
+  function renderCell(col, qubit) {
+    var cell = cellElements[col] && cellElements[col][qubit];
+    if (!cell) return;
+
+    var colData = circuitData[col];
+
+    // 清空所有门相关的属性和内容
+    cell.removeAttribute('data-gate');
+    cell.removeAttribute('data-cnot-role');
+    cell.innerHTML = '';
+
+    if (!colData) return; // 空列
+
+    if (colData.cnot === true) {
+      // CNOT列：根据qubit渲染控制点或目标点
+      cell.setAttribute('data-gate', 'CNOT');
+      if (qubit === 0) {
+        // 控制位 q₀ → 实心圆点
+        cell.setAttribute('data-cnot-role', 'control');
+        cell.innerHTML = '<span class="cnot-control"></span>';
+      } else {
+        // 目标位 q₁ → 空心圆
+        cell.setAttribute('data-cnot-role', 'target');
+        cell.innerHTML = '<span class="cnot-target"></span>';
+      }
+    } else if (colData.hasOwnProperty(String(qubit))) {
+      // 单比特门
+      var gateName = colData[qubit];
+      cell.setAttribute('data-gate', gateName);
+      cell.innerHTML = '<span class="gate-symbol">' + gateName + '</span>';
+    }
+  }
+
+  /** 清空并重渲染整列 */
+  function renderColumn(col) {
+    renderCell(col, 0);
+    renderCell(col, 1);
+  }
+
+  // ==========================================================
+  //  4. 门放置逻辑
+  // ==========================================================
+
+  /**
+   * 在指定单元格放置单比特门
+   * 互斥检查：所在列不能已有CNOT
+   */
+  function placeSingleGate(col, qubit, gateName) {
+    var colData = circuitData[col];
+
+    // 该列已有CNOT → 非法
+    if (colData && colData.cnot === true) {
+      animateInvalid(col, qubit);
+      return false;
+    }
+
+    // 初始化列数据
+    if (!colData) {
+      circuitData[col] = {};
+    }
+
+    // 放置门（可能覆盖同格已有门）
+    circuitData[col][qubit] = gateName;
+    renderCell(col, qubit);
+    animatePlace(col, qubit);
+    return true;
+  }
+
+  /**
+   * 在指定列放置CNOT（控制=q₀, 目标=q₁）
+   * 互斥检查：该列不能有任何单比特门
+   */
+  function placeCNOT(col) {
+    var colData = circuitData[col];
+
+    // 该列已有单比特门 → 非法
+    if (colData && !colData.cnot) {
+      // 检查是否有任何单比特门键
+      var hasSingle = false;
+      for (var key in colData) {
+        if (colData.hasOwnProperty(key) && key !== 'cnot') {
+          hasSingle = true;
+          break;
+        }
+      }
+      if (hasSingle) {
+        animateInvalid(col, 0);
+        animateInvalid(col, 1);
+        return false;
+      }
+    }
+
+    // 覆盖放置（可能覆盖已有CNOT，即重新放置同一列）
+    circuitData[col] = { cnot: true };
+    renderColumn(col);
+    animatePlace(col, 0);
+    animatePlace(col, 1);
+    return true;
+  }
+
+  // ==========================================================
+  //  5. 门删除逻辑
+  // ==========================================================
+
+  /** 删除指定单元格的单比特门 */
+  function removeSingleGate(col, qubit) {
+    var colData = circuitData[col];
+    if (!colData || colData.cnot === true) return false;
+
+    delete colData[qubit];
+
+    // 若该列变为空对象 → 置null
+    if (Object.keys(colData).length === 0) {
+      circuitData[col] = null;
+    }
+
+    renderCell(col, qubit);
+    return true;
+  }
+
+  /** 删除整列CNOT */
+  function removeCNOT(col) {
+    var colData = circuitData[col];
+    if (!colData || colData.cnot !== true) return false;
+
+    circuitData[col] = null;
+    renderColumn(col);
+    return true;
+  }
+
+  /**
+   * 智能删除：根据列数据自动判断删除CNOT或单比特门
+   * 用于右键/擦除操作
+   */
+  function smartRemove(col, qubit) {
+    var colData = circuitData[col];
+    if (!colData) return false;
+
+    if (colData.cnot === true) {
+      // CNOT列 → 删除整列
+      return removeCNOT(col);
+    } else if (colData.hasOwnProperty(String(qubit))) {
+      // 该位置有单比特门 → 删除它
+      return removeSingleGate(col, qubit);
+    }
+    return false;
+  }
+
+  // ==========================================================
+  //  6. 单元格点击处理
+  // ==========================================================
+
+  /**
+   * 左键点击单元格
+   * - 选中单比特门 → 放置到该行
+   * - 选中CNOT → 放置到该列
+   * - 选中ERASER → 删除该位置的门
+   * - 未选中任何门 → 无操作
+   */
+  function onCellClick(col, qubit, event) {
+    if (!selectedGate) return;
+
+    var success = false;
+
+    switch (selectedGate) {
+      case 'H':
+      case 'X':
+      case 'Y':
+      case 'Z':
+      case 'S':
+        success = placeSingleGate(col, qubit, selectedGate);
+        break;
+      case 'CNOT':
+        success = placeCNOT(col);
+        break;
+      case 'ERASER':
+        success = smartRemove(col, qubit);
+        break;
+    }
+  }
+
+  /**
+   * 右键点击单元格 → 删除该位置的门
+   * 阻止默认上下文菜单
+   */
+  function onCellContextMenu(col, qubit, event) {
+    event.preventDefault();
+    smartRemove(col, qubit);
+  }
+
+  // ==========================================================
+  //  7. 视觉反馈动画
+  // ==========================================================
+
+  /** 放置成功脉冲动画 */
+  function animatePlace(col, qubit) {
+    var cell = cellElements[col] && cellElements[col][qubit];
+    if (!cell) return;
+
+    // 移除后重新添加以触发动画重播
+    cell.classList.remove('gate-placed');
+    void cell.offsetWidth; // 强制回流
+    cell.classList.add('gate-placed');
+  }
+
+  /** 非法操作闪红 */
+  function animateInvalid(col, qubit) {
+    var cell = cellElements[col] && cellElements[col][qubit];
+    if (!cell) return;
+
+    cell.classList.remove('invalid-flash');
+    void cell.offsetWidth;
+    cell.classList.add('invalid-flash');
+  }
+
+  // ==========================================================
+  //  8. 事件绑定
+  // ==========================================================
+
+  /** 为所有单元格绑定点击和右键事件 */
+  function bindCellEvents() {
+    for (var col = 0; col < numCols; col++) {
+      for (var qubit = 0; qubit < 2; qubit++) {
+        var cell = cellElements[col] && cellElements[col][qubit];
+        if (!cell) continue;
+
+        // 使用闭包捕获 col, qubit
+        (function (c, q, el) {
+          el.addEventListener('click', function (e) {
+            onCellClick(c, q, e);
+          });
+          el.addEventListener('contextmenu', function (e) {
+            onCellContextMenu(c, q, e);
+          });
+        })(col, qubit, cell);
+      }
+    }
+  }
+
+  /** 为门面板按钮绑定点击事件 */
+  function bindGatePanelEvents() {
+    var gateNames = ['H', 'X', 'Y', 'Z', 'S', 'CNOT', 'ERASER'];
+    for (var i = 0; i < gateNames.length; i++) {
+      var btn = getGateBtn(gateNames[i]);
+      if (!btn) continue;
+
+      btn.addEventListener('click', function (gateName) {
+        return function () {
+          if (!isGateLocked(gateName)) {
+            selectGate(gateName);
+          }
+        };
+      }(gateNames[i]));
+    }
+  }
+
+  /** 全局键盘事件 */
+  function bindKeyboardEvents() {
+    document.addEventListener('keydown', function (e) {
+      // ESC 取消选中
+      if (e.key === 'Escape') {
+        deselectGate();
+        return;
+      }
+
+      // Delete 键 → 选中擦除
+      if (e.key === 'Delete') {
+        selectGate('ERASER');
+        return;
+      }
+
+      // 数字键 1-5 → 选中对应可用门
+      var numKey = parseInt(e.key, 10);
+      if (numKey >= 1 && numKey <= 6) {
+        rebuildShortcutMap(); // 确保映射是最新的
+        var idx = numKey - 1;
+        if (idx < shortcutMap.length) {
+          e.preventDefault(); // 防止浏览器默认行为
+          selectGate(shortcutMap[idx]);
+        }
+      }
+    });
+  }
+
+  /** 点击页面空白区域取消选中（点击非网格非面板区域时） */
+  function bindDeselectOnOutsideClick() {
+    document.addEventListener('click', function (e) {
+      var target = e.target;
+
+      // 点击了面板按钮 → 不取消
+      if (target.closest('.gate-btn')) return;
+      // 点击了网格单元格 → 不取消
+      if (target.closest('.circuit-cell')) return;
+
+      // 其他区域 → 取消选中
+      if (selectedGate) {
+        deselectGate();
+      }
+    });
+  }
+
+  // ==========================================================
+  //  9. 初始化与重置
+  // ==========================================================
+
+  /**
+   * 构建 cellElements 二维查找表
+   * 必须在DOM就绪后调用
+   */
+  function buildCellLookup() {
+    cellElements = [];
+    for (var col = 0; col < numCols; col++) {
+      cellElements[col] = [];
+      for (var qubit = 0; qubit < 2; qubit++) {
+        cellElements[col][qubit] = getCell(col, qubit);
+      }
+    }
+  }
+
+  /** 清空所有电路数据和DOM */
+  function clearAllCells() {
+    for (var col = 0; col < numCols; col++) {
+      circuitData[col] = null;
+      renderColumn(col);
+    }
+    deselectGate();
+  }
+
+  /**
+   * 初始化模块
+   * 调用时机：DOMContentLoaded 之后
+   */
+  function init() {
+    buildCellLookup();
+    // 以实际DOM列数为准（初始8列，addColumn后可扩展）
+    numCols = cellElements.length;
+    circuitData = new Array(numCols);
+    for (var i = 0; i < numCols; i++) {
+      circuitData[i] = null;
+    }
+    rebuildShortcutMap();
+    bindCellEvents();
+    bindGatePanelEvents();
+    bindKeyboardEvents();
+    bindDeselectOnOutsideClick();
+  }
+
+  // ==========================================================
+  // 10. 公开API
+  // ==========================================================
+
+  /**
+   * 获取当前电路配置
+   * @returns {Array} 长度=numCols的数组，circuitData[col] 为 null 或
+   *   {0: gateName} | {1: gateName} | {0: g0, 1: g1} | {cnot: true}
+   *   可直接遍历传递给 QuantumSimulator.applyColumn()
+   */
+  function getCircuitData() {
+    // 返回深拷贝，防止外部修改内部状态
+    return circuitData.map(function (colData) {
+      if (!colData) return null;
+      if (colData.cnot === true) return { cnot: true };
+      var copy = {};
+      for (var key in colData) {
+        if (colData.hasOwnProperty(key)) {
+          copy[key] = colData[key];
+        }
+      }
+      return copy;
+    });
+  }
+
+  /** 获取当前选中的门类型 */
+  function getSelectedGate() {
+    return selectedGate;
+  }
+
+  /** 锁定/解锁指定门按钮 */
+  function setGateLocked(gateName, locked) {
+    var btn = getGateBtn(gateName);
+    if (!btn) return;
+    if (locked) {
+      btn.classList.add('locked');
+    } else {
+      btn.classList.remove('locked');
+    }
+    rebuildShortcutMap();
+  }
+
+  /**
+   * 将数字转换为 Unicode 下标字符串（如 8 → "₈"，10 → "₁₀"）
+   */
+  function toSubscript(num) {
+    var digits = String(num);
+    var result = '';
+    for (var i = 0; i < digits.length; i++) {
+      result += String.fromCharCode(0x2080 + (digits.charCodeAt(i) - 48));
+    }
+    return result;
+  }
+
+  /**
+   * 动态增加一列到网格（DOM创建 + 数据结构更新 + 事件绑定）
+   */
+  function addColumn() {
+    var grid = document.getElementById('circuit-grid');
+    if (!grid) return;
+
+    var newColIndex = numCols;          // 0-indexed
+    var gridColPos = newColIndex + 2;   // CSS Grid列号（列1=标签，列2起=电路列）
+
+    // --- 创建时间步标签 ---
+    var label = document.createElement('span');
+    label.className = 'timestep-label';
+    label.style.gridRow = '1';
+    label.style.gridColumn = String(gridColPos);
+    label.textContent = 't' + toSubscript(newColIndex);
+
+    // --- 创建 q₀ 单元格 ---
+    var cell0 = document.createElement('div');
+    cell0.className = 'circuit-cell';
+    cell0.setAttribute('data-col', String(newColIndex));
+    cell0.setAttribute('data-qubit', '0');
+    cell0.style.gridRow = '2';
+    cell0.style.gridColumn = String(gridColPos);
+
+    // --- 创建 q₁ 单元格 ---
+    var cell1 = document.createElement('div');
+    cell1.className = 'circuit-cell';
+    cell1.setAttribute('data-col', String(newColIndex));
+    cell1.setAttribute('data-qubit', '1');
+    cell1.style.gridRow = '3';
+    cell1.style.gridColumn = String(gridColPos);
+
+    // --- 追加到网格 ---
+    grid.appendChild(label);
+    grid.appendChild(cell0);
+    grid.appendChild(cell1);
+
+    // --- 更新 CSS Grid 列数 ---
+    numCols += 1;
+    grid.style.gridTemplateColumns = '40px repeat(' + numCols + ', var(--cell-size))';
+
+    // --- 更新数据结构 ---
+    circuitData[newColIndex] = null;
+    cellElements[newColIndex] = [cell0, cell1];
+
+    // --- 绑定事件 ---
+    (function (col, c0, c1) {
+      c0.addEventListener('click',     function (e) { onCellClick(col, 0, e); });
+      c0.addEventListener('contextmenu', function (e) { onCellContextMenu(col, 0, e); });
+      c1.addEventListener('click',     function (e) { onCellClick(col, 1, e); });
+      c1.addEventListener('contextmenu', function (e) { onCellContextMenu(col, 1, e); });
+    })(newColIndex, cell0, cell1);
+
+    // --- 自动滚动到新列 ---
+    var scrollWrap = document.querySelector('.circuit-scroll');
+    if (scrollWrap) {
+      scrollWrap.scrollLeft = scrollWrap.scrollWidth;
+    }
+  }
+
+  /** 获取当前列数 */
+  function getNumCols() {
+    return numCols;
+  }
+
+  // ==========================================================
+  //  挂载到全局
+  // ==========================================================
+
+  window.CircuitGrid = {
+    init: init,
+    clearAllCells: clearAllCells,
+    getCircuitData: getCircuitData,
+    getSelectedGate: getSelectedGate,
+    selectGate: selectGate,
+    deselectGate: deselectGate,
+    setGateLocked: setGateLocked,
+    addColumn: addColumn,
+    getNumCols: getNumCols,
+
+    // 暴露内部方法供测试
+    _placeSingleGate: placeSingleGate,
+    _placeCNOT: placeCNOT,
+    _removeSingleGate: removeSingleGate,
+    _removeCNOT: removeCNOT,
+    _smartRemove: smartRemove
+  };
+
+})();
+
+// ============================================================
+// 第3部分结束，等待UI主控层（第4部分）调用 CircuitGrid.init()
+// ============================================================
+
+  </script>
+  <script>
+// ============================================================
+// 第4部分：运行电路与动画 — CircuitRunner
+// 负责逐列演化态向量、步骤动画、分析面板更新。
+// 依赖：CircuitGrid（电路数据）、QuantumSimulator（计算引擎）、
+//       index.html（DOM面板元素）
+// ============================================================
+
+(function () {
+  'use strict';
+
+  // ==========================================================
+  //  动态注入本模块所需的 CSS
+  // ==========================================================
+  var styleSheet = document.createElement('style');
+  styleSheet.textContent = [
+    /* 动画进行中：当前活跃列高亮 */
+    '.circuit-cell.col-active {',
+    '  border-color: #ffffff !important;',
+    '  box-shadow: 0 0 18px rgba(255,255,255,0.45) !important;',
+    '  z-index: 2;',
+    '  transition: border-color 0.2s, box-shadow 0.2s;',
+    '}',
+    /* 已应用列半透明 */
+    '.circuit-cell.col-applied {',
+    '  opacity: 0.55;',
+    '  transition: opacity 0.3s;',
+    '}',
+    /* 运行按钮禁用态 */
+    '#btn-run:disabled {',
+    '  background: #555;',
+    '  color: #999;',
+    '  cursor: not-allowed;',
+    '  opacity: 0.6;',
+    '}',
+    /* 态向量显示区提示文字 */
+    '#state-vector-display .circuit-changed-msg {',
+    '  color: #e67e22;',
+    '  font-style: italic;',
+    '}',
+    '#state-vector-display .circuit-error-msg {',
+    '  color: #e74c3c;',
+    '  font-style: italic;',
+    '}'
+  ].join('\n');
+  document.head.appendChild(styleSheet);
+
+  // ==========================================================
+  //  内部状态
+  // ==========================================================
+
+  /** 动画是否正在运行（防止重复点击） */
+  var isAnimating = false;
+
+  /** 运行后缓存的最终态向量（供外部查询），null表示未运行或已失效 */
+  var lastRunState = null;
+
+  /** 每步动画持续时间（毫秒） */
+  var STEP_DURATION = 500;
+
+  /** 电路是否已被编辑（运行后） */
+  var circuitDirty = true;
+
+  // ==========================================================
+  //  1. DOM 辅助
+  // ==========================================================
+
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  /** 获取指定列的单元格元素数组 [q₀元素, q₁元素] */
+  function getColumnCells(col) {
+    return [
+      document.querySelector('.circuit-cell[data-col="' + col + '"][data-qubit="0"]'),
+      document.querySelector('.circuit-cell[data-col="' + col + '"][data-qubit="1"]')
+    ];
+  }
+
+  // ==========================================================
+  //  2. 分析面板更新
+  // ==========================================================
+
+  /**
+   * 更新右侧分析面板：态向量文字 + 4条概率条形图
+   * @param {Array<Object>} state - QuantumSimulator 态向量
+   */
+  function updateAnalysisPanel(state) {
+    // --- 态向量文字 ---
+    var displayEl = $('state-vector-display');
+    if (displayEl) {
+      var stateStr = QuantumSimulator.stateToString(state);
+      displayEl.innerHTML = '<span style="color:#1abc9c;font-weight:600;">|ψ⟩ = ' + stateStr + '</span>';
+    }
+
+    // --- 概率条形图 ---
+    var probs = QuantumSimulator.getProbabilities(state);
+    var basisKeys = ['00', '01', '10', '11'];
+
+    for (var i = 0; i < 4; i++) {
+      var key = basisKeys[i];
+      var barEl = $('bar-' + key);   // .bar-fill 元素
+      var pctEl = $('pct-' + key);   // .bar-pct 元素
+
+      if (barEl) {
+        var pct = probs[i] * 100;
+        barEl.style.width = pct.toFixed(1) + '%';
+      }
+      if (pctEl) {
+        pctEl.textContent = (probs[i] * 100).toFixed(1) + '%';
+      }
+    }
+  }
+
+  /**
+   * 重置分析面板为初始态 |00⟩ = 100%
+   * 若 circuitDirty=true 则显示"电路已更改"提示
+   */
+  function resetAnalysisPanel(optMessage) {
+    var displayEl = $('state-vector-display');
+    var msg = optMessage || '电路已更改，请重新运行';
+
+    if (displayEl) {
+      displayEl.innerHTML = '<span class="circuit-changed-msg">⚠ ' + msg + '</span>';
+    }
+
+    // 概率条形图重置：|00⟩=100%，其余=0%
+    var barIds = ['bar-00', 'bar-01', 'bar-10', 'bar-11'];
+    var pctIds = ['pct-00', 'pct-01', 'pct-10', 'pct-11'];
+
+    for (var i = 0; i < 4; i++) {
+      var barEl = $(barIds[i]);
+      var pctEl = $(pctIds[i]);
+      if (barEl) {
+        barEl.style.width = (i === 0) ? '100%' : '0%';
+      }
+      if (pctEl) {
+        pctEl.textContent = (i === 0) ? '100.0%' : '0.0%';
+      }
+    }
+  }
+
+  // ==========================================================
+  //  3. 列高亮控制
+  // ==========================================================
+
+  /** 为指定列添加活跃高亮 */
+  function highlightColumn(col) {
+    var cells = getColumnCells(col);
+    for (var i = 0; i < cells.length; i++) {
+      if (cells[i]) {
+        cells[i].classList.add('col-active');
+      }
+    }
+  }
+
+  /** 移除指定列的活跃高亮 */
+  function unhighlightColumn(col) {
+    var cells = getColumnCells(col);
+    for (var i = 0; i < cells.length; i++) {
+      if (cells[i]) {
+        cells[i].classList.remove('col-active');
+      }
+    }
+  }
+
+  /** 将指定列标记为"已应用"（半透明） */
+  function markColumnApplied(col) {
+    var cells = getColumnCells(col);
+    for (var i = 0; i < cells.length; i++) {
+      if (cells[i]) {
+        cells[i].classList.add('col-applied');
+      }
+    }
+  }
+
+  /** 清除所有列的高亮和已应用标记 */
+  function clearAllHighlights() {
+    var totalCols = CircuitGrid.getNumCols();
+    for (var col = 0; col < totalCols; col++) {
+      unhighlightColumn(col);
+      var cells = getColumnCells(col);
+      for (var i = 0; i < cells.length; i++) {
+        if (cells[i]) {
+          cells[i].classList.remove('col-applied');
+        }
+      }
+    }
+  }
+
+  // ==========================================================
+  //  4. 运行电路（核心）
+  // ==========================================================
+
+  /**
+   * 运行电路：逐列演化态向量并播放步骤动画
+   *
+   * 流程：
+   *  1. 获取电路配置，过滤空列
+   *  2. 从 |00⟩ 开始，逐列应用 QuantumSimulator.applyColumn()
+   *  3. 每步高亮当前列 → 更新面板 → 等待 STEP_DURATION ms
+   *  4. 动画结束后展示最终结果
+   *
+   * @returns {Promise<void>}
+   */
+  async function runCircuit() {
+    // 防重复点击
+    if (isAnimating) return;
+
+    // 获取电路数据
+    var circuit = CircuitGrid.getCircuitData();
+    var totalCols = circuit.length;
+
+    // 收集所有有门操作的列
+    var activeColumns = [];
+    for (var col = 0; col < totalCols; col++) {
+      if (circuit[col] !== null) {
+        activeColumns.push(col);
+      }
+    }
+
+    // 无任何门 → 提示用户
+    if (activeColumns.length === 0) {
+      var displayEl = $('state-vector-display');
+      if (displayEl) {
+        displayEl.innerHTML = '<span class="circuit-error-msg">⚠ 电路为空，请先在网格上放置量子门</span>';
+      }
+      return;
+    }
+
+    // --- 开始动画 ---
+    isAnimating = true;
+    circuitDirty = false;
+
+    // 禁用运行按钮
+    var runBtn = $('btn-run');
+    if (runBtn) runBtn.disabled = true;
+
+    // 清除之前的动画残留
+    clearAllHighlights();
+
+    // 初始化态向量
+    var state = QuantumSimulator.getInitialState();
+    lastRunState = null;
+
+    // 更新面板显示初始态
+    updateAnalysisPanel(state);
+
+    // 短暂停顿让用户看到初始态
+    await sleep(200);
+
+    // 逐列演化
+    for (var stepIdx = 0; stepIdx < activeColumns.length; stepIdx++) {
+      var col = activeColumns[stepIdx];
+      var colConfig = circuit[col];
+
+      // 应用本列门操作
+      state = QuantumSimulator.applyColumn(colConfig, state);
+
+      // 高亮当前列
+      highlightColumn(col);
+
+      // 更新面板
+      updateAnalysisPanel(state);
+
+      // 等待一步
+      await sleep(STEP_DURATION);
+
+      // 取消高亮，标记为已应用
+      unhighlightColumn(col);
+      markColumnApplied(col);
+    }
+
+    // 保存最终态
+    lastRunState = state;
+
+    // 短暂延迟后清除所有"已应用"标记
+    await sleep(400);
+    clearAllHighlights();
+
+    // 恢复运行按钮
+    if (runBtn) runBtn.disabled = false;
+    isAnimating = false;
+  }
+
+  /** Promise化的setTimeout */
+  function sleep(ms) {
+    return new Promise(function (resolve) {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  // ==========================================================
+  //  5. 电路编辑检测与重置
+  // ==========================================================
+
+  /**
+   * 电路被编辑后：实时计算当前态矢量并更新面板
+   * - 清除动画高亮
+   * - 若电路为空 → 显示 |00⟩
+   * - 若电路有门 → 静默计算态矢量并更新面板
+   */
+  function onCircuitEdited() {
+    if (isAnimating) return;
+
+    clearAllHighlights();
+    circuitDirty = true;
+    lastRunState = null;
+
+    // 实时计算当前态
+    if (typeof CircuitGrid !== 'undefined' && typeof QuantumSimulator !== 'undefined') {
+      var circuit = CircuitGrid.getCircuitData();
+      var state = QuantumSimulator.getInitialState();
+      var hasGates = false;
+      for (var col = 0; col < circuit.length; col++) {
+        if (circuit[col] !== null) {
+          hasGates = true;
+          state = QuantumSimulator.applyColumn(circuit[col], state);
+        }
+      }
+      if (hasGates) {
+        updateAnalysisPanel(state);
+      } else {
+        // 空电路：显示 |00⟩ 基态
+        resetAnalysisPanelToZero();
+      }
+    }
+  }
+
+  /** 将分析面板重置为 |00⟩ = 100% 基态显示 */
+  function resetAnalysisPanelToZero() {
+    var displayEl = $('state-vector-display');
+    if (displayEl) {
+      displayEl.innerHTML = '<span style="color:#1abc9c;">|ψ⟩ = 1.000|00⟩</span>';
+    }
+    var bars = ['bar-00','bar-01','bar-10','bar-11'];
+    var pcts = ['pct-00','pct-01','pct-10','pct-11'];
+    for (var i = 0; i < 4; i++) {
+      var b = $(bars[i]); if (b) b.style.width = (i === 0 ? '100%' : '0%');
+      var p = $(pcts[i]); if (p) p.textContent = (i === 0 ? '100.0%' : '0.0%');
+    }
+  }
+
+  /**
+   * 设置电路编辑监听
+   * 使用事件委托在 circuit-area 上捕获对单元格的修改
+   */
+  function setupCircuitEditListeners() {
+    var circuitArea = document.getElementById('circuit-area');
+    if (!circuitArea) return;
+
+    // 点击单元格（放置门）→ 编辑
+    circuitArea.addEventListener('click', function (e) {
+      if (e.target.closest('.circuit-cell')) {
+        // 延迟检查：等待 CircuitGrid 的处理器先更新 DOM
+        setTimeout(onCircuitEdited, 0);
+      }
+    });
+
+    // 右键单元格（删除门）→ 编辑
+    circuitArea.addEventListener('contextmenu', function (e) {
+      if (e.target.closest('.circuit-cell')) {
+        setTimeout(onCircuitEdited, 0);
+      }
+    });
+  }
+
+  // ==========================================================
+  //  6. 重置与清除操作
+  // ==========================================================
+
+  /** 清除电路：清空所有门 + 重置面板（保留关卡状态） */
+  function clearCircuit() {
+    if (isAnimating) return;
+
+    CircuitGrid.clearAllCells();
+    clearAllHighlights();
+    resetAnalysisPanelToZero();
+    circuitDirty = true;
+    lastRunState = null;
+  }
+
+  /** 完全重置：清空电路 + 重置面板 + 关闭弹窗 */
+  function fullReset() {
+    if (isAnimating) return;
+
+    CircuitGrid.clearAllCells();
+    clearAllHighlights();
+    resetAnalysisPanelToZero();
+    circuitDirty = true;
+    lastRunState = null;
+
+    // 关闭所有模态窗口
+    var modals = document.querySelectorAll('.modal-overlay');
+    for (var i = 0; i < modals.length; i++) {
+      modals[i].classList.remove('active');
+    }
+
+    // 取消门选中
+    CircuitGrid.deselectGate();
+  }
+
+  // ==========================================================
+  //  7. 按钮与快捷键绑定
+  // ==========================================================
+
+  function bindButtons() {
+    // "运行电路"按钮
+    var runBtn = $('btn-run');
+    if (runBtn) {
+      runBtn.addEventListener('click', function () {
+        if (!isAnimating) {
+          runCircuit();
+        }
+      });
+    }
+
+    // "重置关卡"按钮
+    var resetBtn = $('btn-reset');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', fullReset);
+    }
+
+    // "添加列"按钮
+    var addColBtn = $('btn-add-col');
+    if (addColBtn) {
+      addColBtn.addEventListener('click', function () {
+        if (!isAnimating && typeof CircuitGrid !== 'undefined') {
+          CircuitGrid.addColumn();
+          onCircuitEdited();
+        }
+      });
+    }
+  }
+
+  function bindKeyboardShortcuts() {
+    document.addEventListener('keydown', function (e) {
+      // 忽略输入框内的按键
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      // C 键 → 清除电路（保留关卡状态）
+      if (e.key === 'c' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (!isAnimating) {
+          e.preventDefault();
+          clearCircuit();
+        }
+      }
+
+      // Ctrl+Shift+R → 完全重置
+      if (e.key === 'R' && e.ctrlKey && e.shiftKey) {
+        e.preventDefault();
+        fullReset();
+      }
+
+      // Enter 键 → 运行电路
+      if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+        if (!isAnimating) {
+          e.preventDefault();
+          runCircuit();
+        }
+      }
+    });
+  }
+
+  // ==========================================================
+  //  8. 模态窗口关闭按钮
+  // ==========================================================
+
+  function bindModalCloseButtons() {
+    // 所有带有 data-close 属性的关闭按钮
+    var closeBtns = document.querySelectorAll('.modal-close[data-close]');
+    for (var i = 0; i < closeBtns.length; i++) {
+      closeBtns[i].addEventListener('click', function () {
+        var modalId = this.getAttribute('data-close');
+        var modal = document.getElementById(modalId);
+        if (modal) {
+          modal.classList.remove('active');
+        }
+      });
+    }
+
+    // 点击遮罩层关闭弹窗
+    var overlays = document.querySelectorAll('.modal-overlay');
+    for (var j = 0; j < overlays.length; j++) {
+      overlays[j].addEventListener('click', function (e) {
+        if (e.target === this) {
+          this.classList.remove('active');
+        }
+      });
+    }
+  }
+
+  // ==========================================================
+  //  9. 顶部按钮（图鉴、提示）
+  // ==========================================================
+
+  function bindTopbarButtons() {
+    var galleryBtn = $('btn-gallery');
+    var hintBtn = $('btn-hint');
+
+    if (galleryBtn) {
+      galleryBtn.addEventListener('click', function () {
+        var modal = $('modal-gallery');
+        if (modal) modal.classList.add('active');
+      });
+    }
+
+    if (hintBtn) {
+      hintBtn.addEventListener('click', function () {
+        var modal = $('modal-hint');
+        if (modal) modal.classList.add('active');
+      });
+    }
+  }
+
+  // ==========================================================
+  // 10. 初始化
+  // ==========================================================
+
+  /**
+   * 初始化模块
+   * 调用时机：DOMContentLoaded 之后，CircuitGrid.init() 之后
+   */
+  function init() {
+    bindButtons();
+    bindKeyboardShortcuts();
+    bindModalCloseButtons();
+    bindTopbarButtons();
+    setupCircuitEditListeners();
+
+    // 初始面板状态
+    resetAnalysisPanel('点击网格放置量子门，然后运行电路');
+  }
+
+  // ==========================================================
+  //  公开API
+  // ==========================================================
+
+  window.CircuitRunner = {
+    init: init,
+    runCircuit: runCircuit,
+    clearCircuit: clearCircuit,
+    fullReset: fullReset,
+    updateAnalysisPanel: updateAnalysisPanel,
+    resetAnalysisPanel: resetAnalysisPanel,
+
+    /** 获取最近一次运行成功后的态向量（null表示未运行或已失效） */
+    getLastRunState: function () { return lastRunState; },
+
+    /** 查询动画是否正在运行 */
+    isAnimating: function () { return isAnimating; },
+
+    /** 查询电路是否已被编辑 */
+    isCircuitDirty: function () { return circuitDirty; }
+  };
+
+})();
+
+// ============================================================
+// 第4部分结束，等待主入口（第5部分）串联所有模块
+// ============================================================
+
+  </script>
+  <script>
+// ============================================================
+// 第5部分：关卡系统与进度存储 — LevelManager
+// 负责关卡配置、目标判定、通关逻辑、localStorage进度持久化。
+// 依赖：CircuitGrid（门锁定/电路数据）、QuantumSimulator（态向量）
+// ============================================================
+
+(function () {
+  'use strict';
+
+  // ==========================================================
+  //  localStorage 键名常量
+  // ==========================================================
+  var STORAGE_KEY_LEVEL    = 'turing_quamplete_currentLevel';
+  var STORAGE_KEY_GALLERY  = 'turing_quamplete_galleryRead';
+  var STORAGE_KEY_TUTORIAL = 'turing_quamplete_tutorialRead';
+  var STORAGE_KEY_COMPLETE = 'turing_quamplete_completedLevels'; // JSON数组
+  var STORAGE_KEY_INTRO    = 'turing_quamplete_introShown';      // JSON数组，已展示过关卡introduction的关
+
+  // 容差（所有概率比较使用）
+  var TOLERANCE = 0.05;
+
+  // ==========================================================
+  //  1. 关卡配置数据
+  //     availableGates: 该关可用的门面板按钮
+  //     targetProbabilities: {basisKey: [min, max]}，basisKey∈{'00','01','10','11'}
+  //     specialCheck: 可选，特殊判定函数名（见 checkSpecial 分支）
+  // ==========================================================
+  var LEVELS = [
+    // ---- 关卡 1: 叠加态 ----
+    {
+      id: 1,
+      name: '叠加态',
+      description: '目标：创建均匀叠加态，使得 |00⟩ 和 |10⟩ 各约 50% 概率',
+      availableGates: ['H'],
+      targetProbabilities: {
+        '00': [0.45, 0.55],
+        '10': [0.45, 0.55]
+      },
+      specialCheck: null,
+      hint: '试试对 q₀ 作用 Hadamard 门。H 门将 |0⟩ 变为 (|0⟩+|1⟩)/√2。',
+      solution: '在 q₀ 的任意列放置 H 门',
+      newGatesIntro: [{
+        symbol: 'H', name: 'Hadamard 门', cssClass: 'gate-h',
+        matrix: '$$H = \\frac{1}{\\sqrt{2}}\\begin{pmatrix}1 & 1 \\\\ 1 & -1\\end{pmatrix}$$',
+        description: 'Hadamard 门是最重要的量子门之一。它将确定态的量子比特转换为叠加态，是创建量子并行性的基础。H² = I，两次 H 门会回到原态。',
+        hint: '叠加态中的量子比特同时处于 |0⟩ 和 |1⟩，直到被测量才坍缩到其中一个。'
+      }]
+    },
+
+    // ---- 关卡 2: 量子翻转 ----
+    {
+      id: 2,
+      name: '量子翻转',
+      description: '目标：翻转 q₀，使测量结果为 |10⟩ 的概率 ≥ 95%',
+      availableGates: ['X'],
+      targetProbabilities: {
+        '10': [0.95, 1.0]
+      },
+      specialCheck: null,
+      hint: 'X 门是量子版的 NOT 操作，将 |0⟩ 翻转为 |1⟩。',
+      solution: '在 q₀ 的任意列放置 X 门',
+      newGatesIntro: [{
+        symbol: 'X', name: 'Pauli-X 门', cssClass: 'gate-x',
+        matrix: '$$X = \\begin{pmatrix}0 & 1 \\\\ 1 & 0\\end{pmatrix}$$',
+        description: 'Pauli-X 门是量子版的 NOT 操作——它将 |0⟩ 翻转为 |1⟩，将 |1⟩ 翻转为 |0⟩。X² = I，在 Bloch 球面上绕 X 轴旋转 π。',
+        hint: 'X 门是唯一能完全翻转量子比特状态的 Pauli 门，是从 |0⟩ 到 |1⟩ 的最直接途径。'
+      }]
+    },
+
+    // ---- 关卡 3: 纠缠的魔力 ----
+    {
+      id: 3,
+      name: '纠缠的魔力',
+      description: '目标：创建 Bell 态，使得 |00⟩ 和 |11⟩ 各约 50%',
+      availableGates: ['H', 'CNOT'],
+      targetProbabilities: {
+        '00': [0.45, 0.55],
+        '11': [0.45, 0.55]
+      },
+      specialCheck: null,
+      hint: '先对 q₀ 作用 H 门创建叠加态，再用 CNOT 将叠加信息传递到 q₁。控制位在上，目标位在下。',
+      solution: '第 1 列 q₀ 放置 H 门，第 2 列放置 CNOT',
+      newGatesIntro: [{
+        symbol: 'CNOT', name: '受控非门 (CNOT)', cssClass: 'cnot',
+        matrix: '$$\\text{CNOT} = \\begin{pmatrix}1 & 0 & 0 & 0 \\\\ 0 & 1 & 0 & 0 \\\\ 0 & 0 & 0 & 1 \\\\ 0 & 0 & 1 & 0\\end{pmatrix}$$',
+        description: 'CNOT 是双量子比特门：当控制位（上方的 q₀）为 |1⟩ 时翻转目标位（下方的 q₁）。CNOT 是唯一能创建量子纠缠的门——结合叠加态可生成 Bell 态。',
+        hint: 'CNOT 只有在控制位为 |1⟩ 时才触发目标位翻转。这意味着你需要先让控制位进入 |1⟩ 状态，才能看到 CNOT 的效果。'
+      }]
+    },
+
+    // ---- 关卡 4: 双重叠加 ----
+    {
+      id: 4,
+      name: '双重叠加',
+      description: '目标：四个基态各约 25% 概率——同时对两个量子比特创建叠加态',
+      availableGates: ['H'],
+      targetProbabilities: {
+        '00': [0.20, 0.30],
+        '01': [0.20, 0.30],
+        '10': [0.20, 0.30],
+        '11': [0.20, 0.30]
+      },
+      specialCheck: null,
+      hint: 'H ⊗ H 作用于 |00⟩ 可以同时为两个量子比特创建叠加态。试试在两个量子比特上都放 H 门。',
+      solution: '在同一列或不同列分别对 q₀ 和 q₁ 放置 H 门',
+      newGatesIntro: [] // 无新门，H门已在关卡1引入
+    },
+
+    // ---- 关卡 5: 隐藏的X门 ----
+    {
+      id: 5,
+      name: '隐藏的X门',
+      description: '目标：翻转 q₀ 使 |10⟩ 概率 ≥ 95%，且电路必须同时包含 H 门和 Z 门',
+      availableGates: ['H', 'Z'],
+      targetProbabilities: {
+        '10': [0.95, 1.0]
+      },
+      specialCheck: 'containsHAndZ', // 必须同时使用H和Z门
+      hint: '你知道 HZH = X 吗？试试对 q₀ 依次放置 H→Z→H。H 创建叠加态，Z 翻转相位，第二个 H 产生干涉——组合起来就是一个 X 门！',
+      solution: '在 q₀ 依次放 H、Z、H 门（HZH = X，翻转到 |10⟩）',
+      newGatesIntro: [{
+        symbol: 'Z', name: 'Pauli-Z 门', cssClass: 'gate-z',
+        matrix: '$$Z = \\begin{pmatrix}1 & 0 \\\\ 0 & -1\\end{pmatrix}$$',
+        description: 'Pauli-Z 门是相位翻转门：|0⟩ 保持不变，|1⟩ 变为 -|1⟩。虽然单独使用不改变测量概率，但它与 H 门等组合时可以产生量子干涉效应，创造出意想不到的结果。',
+        hint: '相位翻转不会改变测量概率，但会改变量子态在后续变换中的干涉行为。'
+      }]
+    },
+
+    // ---- 关卡 6: XZ 组合 ----
+    {
+      id: 6,
+      name: 'XZ 组合',
+      description: '目标：|10⟩ 概率 ≥ 95%，且电路中至少包含一个 Z 门',
+      availableGates: ['X', 'Z'],
+      targetProbabilities: {
+        '10': [0.95, 1.0]
+      },
+      specialCheck: 'containsZGate',
+      hint: 'X 门翻转 q₀ 到 |1⟩，Z 门改变相位但不影响测量概率。Z 可以放在不相关的量子比特上。',
+      solution: 'q₀ 放 X 门（翻转到 |10⟩），q₁ 放 Z 门（满足包含Z的要求）',
+      newGatesIntro: [] // 无新门，X和Z已在之前关卡引入
+    },
+
+    // ---- 关卡 7: Y 门的魔法 ----
+    {
+      id: 7,
+      name: 'Y 门的魔法',
+      description: '目标：|00⟩ 和 |10⟩ 各约 50%，且 |10⟩ 分量的虚部必须为负',
+      availableGates: ['H', 'Y'],
+      targetProbabilities: {
+        '00': [0.45, 0.55],
+        '10': [0.45, 0.55]
+      },
+      specialCheck: 'negativeImaginary',
+      hint: 'Y 门引入虚数分量。H 门创建叠加态。思考如何组合它们来得到负虚部的 |10⟩ 分量。',
+      solution: '在 q₀ 先放 Y 门再放 H 门：Y|0⟩=i|1⟩→H 得 (i|00⟩-i|10⟩)/√2，|10⟩ 虚部为负 ✓',
+      newGatesIntro: [
+        {
+          symbol: 'Y', name: 'Pauli-Y 门', cssClass: 'gate-y',
+          matrix: '$$Y = \\begin{pmatrix}0 & -i \\\\ i & 0\\end{pmatrix}$$',
+          description: 'Pauli-Y 门在翻转量子比特的同时引入虚数相位：Y|0⟩ = i|1⟩，Y|1⟩ = -i|0⟩。它在 Bloch 球面上绕 Y 轴旋转 π。',
+          hint: 'Y 门是唯一能引入虚数振幅的 Pauli 门，结合 H 门的叠加能力，可以创造出具有特定相位关系的量子态。'
+        }
+      ]
+    },
+
+    // ---- 关卡 8: 相位的艺术 ----
+    {
+      id: 8,
+      name: '相位的艺术',
+      description: '目标：|00⟩ 和 |10⟩ 各约 50%，但 |10⟩ 分量的虚部必须为正（与第7关相反！）',
+      availableGates: ['H', 'S'],
+      targetProbabilities: {
+        '00': [0.45, 0.55],
+        '10': [0.45, 0.55]
+      },
+      specialCheck: 'positiveImaginary',
+      hint: 'S 门给 |1⟩ 乘以 i。先创建叠加态，再施加 S 门，观察 |10⟩ 分量的虚部变化。',
+      solution: '在 q₀ 先放 H 门再放 S 门：H|0⟩=(|0⟩+|1⟩)/√2，S 得 (|0⟩+i|1⟩)/√2=(|00⟩+i|10⟩)/√2，|10⟩ 虚部为正 ✓',
+      newGatesIntro: [
+        {
+          symbol: 'S', name: 'S 门（相位门）', cssClass: 'gate-s',
+          matrix: '$$S = \\begin{pmatrix}1 & 0 \\\\ 0 & i\\end{pmatrix}$$',
+          description: 'S 门施加 π/2 相位旋转：|0⟩ 不变，|1⟩ 乘以 i。它是 Z 门的平方根（S² = Z），S⁴ = I。利用 S³ = S† 可以实现逆 S 门操作。',
+          hint: 'S 门不改变测量概率，只改变相位。通过与其他门组合，可以创造出具有丰富相位结构的量子态。'
+        }
+      ]
+    }
+  ];
+
+  // ==========================================================
+  //  2. 进度存储（localStorage）
+  // ==========================================================
+
+  function saveToStorage(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      // localStorage 不可用时静默失败
+    }
+  }
+
+  function loadFromStorage(key, defaultValue) {
+    try {
+      var raw = localStorage.getItem(key);
+      if (raw === null) return defaultValue;
+      return JSON.parse(raw);
+    } catch (e) {
+      return defaultValue;
+    }
+  }
+
+  /** 获取当前解锁到的关卡ID */
+  function getStoredLevel() {
+    return loadFromStorage(STORAGE_KEY_LEVEL, 1);
+  }
+
+  /** 保存当前关卡ID */
+  function setStoredLevel(levelId) {
+    saveToStorage(STORAGE_KEY_LEVEL, levelId);
+  }
+
+  /** 获取已完成关卡列表 */
+  function getCompletedLevels() {
+    return loadFromStorage(STORAGE_KEY_COMPLETE, []);
+  }
+
+  /** 标记关卡为已完成 */
+  function markLevelCompleted(levelId) {
+    var completed = getCompletedLevels();
+    if (completed.indexOf(levelId) === -1) {
+      completed.push(levelId);
+      saveToStorage(STORAGE_KEY_COMPLETE, completed);
+    }
+  }
+
+  /** 图鉴已读状态 */
+  function isGalleryRead() {
+    return loadFromStorage(STORAGE_KEY_GALLERY, false);
+  }
+  function setGalleryRead(read) {
+    saveToStorage(STORAGE_KEY_GALLERY, !!read);
+  }
+
+  /** 引导弹窗已读状态 */
+  function isTutorialRead() {
+    return loadFromStorage(STORAGE_KEY_TUTORIAL, false);
+  }
+  function setTutorialRead(read) {
+    saveToStorage(STORAGE_KEY_TUTORIAL, !!read);
+  }
+
+  /** 关卡引导弹窗已读状态（按关卡ID追踪） */
+  function getIntroShownLevels() {
+    return loadFromStorage(STORAGE_KEY_INTRO, []);
+  }
+  function markIntroShown(levelId) {
+    var shown = getIntroShownLevels();
+    if (shown.indexOf(levelId) === -1) {
+      shown.push(levelId);
+      saveToStorage(STORAGE_KEY_INTRO, shown);
+    }
+  }
+  function isIntroShown(levelId) {
+    return getIntroShownLevels().indexOf(levelId) !== -1;
+  }
+
+  /**
+   * 重置所有进度（调试用）
+   * 在浏览器控制台执行: LevelManager.resetAllProgress()
+   */
+  function resetAllProgress() {
+    try {
+      localStorage.removeItem(STORAGE_KEY_LEVEL);
+      localStorage.removeItem(STORAGE_KEY_GALLERY);
+      localStorage.removeItem(STORAGE_KEY_TUTORIAL);
+      localStorage.removeItem(STORAGE_KEY_COMPLETE);
+      localStorage.removeItem(STORAGE_KEY_INTRO);
+    } catch (e) {}
+  }
+
+  // ==========================================================
+  //  3. 当前关卡状态
+  // ==========================================================
+
+  var currentLevelId = 1;
+
+  /** 获取当前关卡配置对象 */
+  function getCurrentLevel() {
+    for (var i = 0; i < LEVELS.length; i++) {
+      if (LEVELS[i].id === currentLevelId) return LEVELS[i];
+    }
+    return LEVELS[0]; // 回退
+  }
+
+  // ==========================================================
+  //  4. 目标判定
+  // ==========================================================
+
+  /**
+   * 判定当前电路运行结果是否达成关卡目标
+   *
+   * @param {Array<number>} probs - getProbabilities() 返回的 [p00,p01,p10,p11]
+   * @param {Array<Object>} state - QuantumSimulator 态向量 [{re,im},...]
+   * @param {Object} level - 关卡配置对象（可选，默认当前关卡）
+   * @returns {{passed: boolean, message: string, details: Array<string>}}
+   */
+  function checkGoal(probs, state, level) {
+    level = level || getCurrentLevel();
+    var target = level.targetProbabilities;
+    var details = [];
+    var allPassed = true;
+
+    // --- 基础判定：概率区间检查 ---
+    var basisKeys = ['00', '01', '10', '11'];
+    for (var i = 0; i < 4; i++) {
+      var key = basisKeys[i];
+      var range = target[key];
+      if (!range) continue; // 该基态无目标约束
+
+      var prob = probs[i];
+      var min = range[0];
+      var max = range[1];
+
+      if (prob < min - TOLERANCE || prob > max + TOLERANCE) {
+        allPassed = false;
+        var expected = formatRange(min, max);
+        details.push(
+          '|' + key + '⟩ 概率为 ' + (prob * 100).toFixed(1) +
+          '%，目标区间 ' + expected
+        );
+      }
+    }
+
+    // --- 特殊判定 ---
+    if (allPassed && level.specialCheck) {
+      var specialResult = runSpecialCheck(level.specialCheck, probs, state);
+      if (!specialResult.passed) {
+        allPassed = false;
+        details.push(specialResult.message);
+      }
+    }
+
+    // --- 构造结果 ---
+    var message;
+    if (allPassed) {
+      message = '目标达成！所有概率指标均满足要求。';
+    } else {
+      message = '未达成目标——以下指标未满足：';
+    }
+
+    return {
+      passed: allPassed,
+      message: message,
+      details: details
+    };
+  }
+
+  /**
+   * 执行特殊判定函数
+   * @returns {{passed: boolean, message: string}}
+   */
+  function runSpecialCheck(checkName, probs, state) {
+    switch (checkName) {
+
+      // 关卡5：必须同时使用 H 和 Z 门
+      case 'containsHAndZ':
+        var hasH = circuitContainsGate('H');
+        var hasZ = circuitContainsGate('Z');
+        if (!hasH && !hasZ) {
+          return { passed: false, message: '电路必须同时包含 H 门和 Z 门' };
+        }
+        if (!hasH) {
+          return { passed: false, message: '电路必须包含至少一个 H 门' };
+        }
+        if (!hasZ) {
+          return { passed: false, message: '电路必须包含至少一个 Z 门' };
+        }
+        return { passed: true, message: '' };
+
+      // 关卡6：电路中至少包含一个 Z 门
+      case 'containsZGate':
+        if (!circuitContainsGate('Z')) {
+          return {
+            passed: false,
+            message: '电路中必须至少包含一个 Z 门'
+          };
+        }
+        return { passed: true, message: '' };
+
+      // 关卡7：|10⟩ 分量的虚部为负
+      case 'negativeImaginary':
+        var alpha10n = state[2];
+        if (alpha10n.im >= -0.01) {
+          return {
+            passed: false,
+            message: '|10⟩ 分量的虚部必须为负（当前 im=' +
+              alpha10n.im.toFixed(4) + '），请尝试其他门序列'
+          };
+        }
+        return { passed: true, message: '' };
+
+      // 关卡8：|10⟩ 分量的虚部为正
+      case 'positiveImaginary':
+        var alpha10p = state[2];
+        if (alpha10p.im <= 0.01) {
+          return {
+            passed: false,
+            message: '|10⟩ 分量的虚部必须为正（当前 im=' +
+              alpha10p.im.toFixed(4) + '），试试 H 后接 S 门'
+          };
+        }
+        return { passed: true, message: '' };
+
+      default:
+        return { passed: true, message: '' };
+    }
+  }
+
+  /**
+   * 遍历电路数据，检查是否包含指定门
+   * @param {string} gateName - 如 'H', 'Z', 'X' 等
+   * @returns {boolean}
+   */
+  function circuitContainsGate(gateName) {
+    if (typeof CircuitGrid === 'undefined') return false;
+    var circuit = CircuitGrid.getCircuitData();
+    for (var col = 0; col < circuit.length; col++) {
+      var colData = circuit[col];
+      if (!colData) continue;
+      // 跳过CNOT列
+      if (colData.cnot === true) continue;
+      // 检查每个量子比特
+      for (var q = 0; q < 2; q++) {
+        if (colData[q] === gateName) return true;
+      }
+    }
+    return false;
+  }
+
+  /** 格式化概率区间为可读字符串 */
+  function formatRange(min, max) {
+    return '[' + (min * 100).toFixed(0) + '%, ' + (max * 100).toFixed(0) + '%]';
+  }
+
+  // ==========================================================
+  //  5. 通关逻辑
+  // ==========================================================
+
+  /**
+   * 运行电路后调用此函数进行目标判定
+   * 由 CircuitRunner.runCircuit() 在动画结束后自动调用
+   *
+   * @param {Array<number>} probs - 概率数组
+   * @param {Array<Object>} state - 态向量
+   */
+  function evaluateResult(probs, state) {
+    var level = getCurrentLevel();
+    var result = checkGoal(probs, state, level);
+
+    if (result.passed) {
+      onLevelPassed(level);
+    } else {
+      onLevelFailed(level, result);
+    }
+  }
+
+  /** 通关处理 */
+  function onLevelPassed(level) {
+    markLevelCompleted(level.id);
+
+    // 更新关卡目标卡片
+    updateGoalCard(level, true);
+
+    // 如有下一关则解锁
+    var hasNext = level.id < LEVELS.length;
+    if (hasNext) {
+      // 预解锁下一关（localStorage可提前更新）
+      setStoredLevel(Math.max(getStoredLevel(), level.id + 1));
+    }
+
+    // 显示通关通知
+    showResultNotification(true, level, hasNext);
+  }
+
+  /** 未通过处理 */
+  function onLevelFailed(level, result) {
+    updateGoalCard(level, false);
+
+    // 显示失败详情
+    showResultNotification(false, level, false, result);
+  }
+
+  // ==========================================================
+  //  6. 关卡切换
+  // ==========================================================
+
+  /**
+   * 加载指定关卡
+   * - 更新 currentLevelId
+   * - 解锁/锁定门面板按钮
+   * - 更新关卡目标卡片
+   * - 清空电路
+   * - 保存进度
+   */
+  /**
+   * 显示关卡引导弹窗：展示本关新引入的量子门
+   */
+  function showLevelIntroModal(level) {
+    return new Promise(function (resolve) {
+      var modal = document.getElementById('modal-level-intro');
+      var body  = document.getElementById('level-intro-body');
+      if (!modal || !body) { resolve(); return; }
+
+      var intro = level.newGatesIntro;
+      if (!intro || intro.length === 0) { resolve(); return; }
+
+      var html = '<p style="color:#f39c12;font-weight:600;margin-bottom:6px;">';
+      html += '第 ' + level.id + ' 关 · ' + level.name + '</p>';
+      html += '<p style="color:#aaa;margin-bottom:14px;font-size:13px;">此关卡将引入以下新量子门：</p>';
+
+      for (var i = 0; i < intro.length; i++) {
+        var g = intro[i];
+        html += '<div style="background:#1a1a2e;border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid #2a2a4a;">';
+        html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">';
+        html += '<div class="gate-symbol-css ' + g.cssClass + '" style="flex-shrink:0;">' + g.symbol + '</div>';
+        html += '<span style="font-weight:600;font-size:15px;">' + g.name + '</span>';
+        html += '</div>';
+        if (g.matrix) {
+          html += '<div style="text-align:center;margin:6px 0;">' + g.matrix + '</div>';
+        }
+        html += '<p style="color:#ccc;font-size:13px;line-height:1.6;">' + g.description + '</p>';
+        html += '<p style="color:#f1c40f;font-size:12px;margin-top:6px;">💡 ' + g.hint + '</p>';
+        html += '</div>';
+      }
+
+      html += '<div style="text-align:center;margin-top:16px;">';
+      html += '<button id="btn-start-level">开始挑战</button>';
+      html += '</div>';
+
+      // 先 KaTeX 渲染再写入DOM，避免 & 被HTML解析破坏
+      body.innerHTML = (typeof window.renderMath === 'function')
+        ? window.renderMath(html) : html;
+
+      modal.classList.add('active');
+      markIntroShown(level.id);
+
+      function close() { modal.classList.remove('active'); resolve(); }
+
+      var startBtn = document.getElementById('btn-start-level');
+      if (startBtn) startBtn.addEventListener('click', close);
+
+      var closeBtn = modal.querySelector('.modal-close');
+      if (closeBtn) closeBtn.addEventListener('click', close);
+
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) close();
+      });
+    });
+  }
+
+  function loadLevel(levelId) {
+    // 边界检查
+    if (levelId < 1 || levelId > LEVELS.length) return;
+
+    currentLevelId = levelId;
+    setStoredLevel(levelId);
+
+    var level = getCurrentLevel();
+
+    // 更新门面板锁定状态
+    updateGateAvailability(level);
+
+    // 更新关卡目标卡片文字
+    updateGoalCard(level, false);
+
+    // 清空电路
+    if (typeof CircuitGrid !== 'undefined') {
+      CircuitGrid.clearAllCells();
+    }
+
+    // 重置分析面板
+    if (typeof CircuitRunner !== 'undefined') {
+      CircuitRunner.resetAnalysisPanel('第 ' + levelId + ' 关 · ' + level.name + ' — 放置量子门，然后运行电路');
+    }
+
+    // 移除旧的通知
+    removeResultNotification();
+
+    // 如有新量子门引入，显示关卡引导
+    if (level.newGatesIntro && level.newGatesIntro.length > 0 && !isIntroShown(levelId)) {
+      setTimeout(function () { showLevelIntroModal(level); }, 300);
+    }
+  }
+
+  /** 加载下一关 */
+  function loadNextLevel() {
+    var nextId = currentLevelId + 1;
+    if (nextId > LEVELS.length) return;
+    removeResultNotification();
+    loadLevel(nextId);
+  }
+
+  /**
+   * 根据关卡配置更新门面板锁定/解锁状态
+   */
+  function updateGateAvailability(level) {
+    if (typeof CircuitGrid === 'undefined') return;
+
+    var allGates = ['H', 'X', 'Y', 'Z', 'CNOT', 'S'];
+    var available = level.availableGates;
+
+    for (var i = 0; i < allGates.length; i++) {
+      var gate = allGates[i];
+      var isAvailable = (available.indexOf(gate) !== -1);
+      CircuitGrid.setGateLocked(gate, !isAvailable);
+    }
+
+    // ERASER 始终可用
+    CircuitGrid.setGateLocked('ERASER', false);
+  }
+
+  // ==========================================================
+  //  7. UI 更新
+  // ==========================================================
+
+  /** 更新关卡目标卡片 */
+  function updateGoalCard(level, passed) {
+    // 右侧面板：关卡序号徽章 + 关卡名
+    var badge = document.getElementById('level-badge');
+    var nameEl = document.getElementById('level-name');
+    if (badge) badge.textContent = '第 ' + level.id + ' 关';
+    if (nameEl) nameEl.textContent = level.name;
+
+    // 右侧面板：关卡目标描述
+    var desc = document.getElementById('level-goal-description');
+    if (desc) desc.textContent = level.description;
+
+    // 底部栏：状态图标
+    var icon = document.getElementById('goal-status-icon');
+    if (icon) icon.textContent = passed ? '✅' : '🎯';
+  }
+
+  /**
+   * 显示结果通知（通关/未通过）
+   * 在分析面板下方动态插入通知卡片
+   */
+  function showResultNotification(passed, level, hasNext, result) {
+    removeResultNotification();
+
+    var container = document.createElement('div');
+    container.id = 'result-notification';
+    container.style.cssText = [
+      'margin-top: 12px;',
+      'padding: 14px 16px;',
+      'border-radius: 8px;',
+      'font-size: 13px;',
+      'line-height: 1.7;',
+      'animation: fadeIn 0.3s ease;'
+    ].join('');
+
+    if (passed) {
+      container.style.background = 'rgba(46,204,113,0.12)';
+      container.style.border = '1px solid rgba(46,204,113,0.4)';
+      container.innerHTML = buildPassedHTML(level, hasNext);
+    } else {
+      container.style.background = 'rgba(231,76,60,0.12)';
+      container.style.border = '1px solid rgba(231,76,60,0.4)';
+      container.innerHTML = buildFailedHTML(result);
+    }
+
+    // 插入到信息面板底部
+    var infoPanel = document.getElementById('info-panel');
+    if (infoPanel) {
+      infoPanel.appendChild(container);
+    }
+  }
+
+  function buildPassedHTML(level, hasNext) {
+    var html = '<div style="color:#2ecc71;font-weight:700;margin-bottom:4px;">目标达成！</div>';
+    html += '<div style="color:#aaa;">第' + level.id + '关 · ' + level.name + ' 完成</div>';
+    if (hasNext) {
+      html += '<button id="btn-next-level" style="';
+      html += 'margin-top:8px;padding:6px 20px;border:none;border-radius:6px;';
+      html += 'background:#2ecc71;color:#fff;font-weight:600;cursor:pointer;';
+      html += '">下一关 →</button>';
+    } else {
+      html += '<div style="color:#f1c40f;margin-top:6px;">全部关卡已完成！恭喜通关！</div>';
+    }
+    return html;
+  }
+
+  function buildFailedHTML(result) {
+    var html = '<div style="color:#e74c3c;font-weight:700;margin-bottom:4px;">未达成目标</div>';
+    if (result.details && result.details.length > 0) {
+      html += '<ul style="margin:4px 0 0 16px;color:#ccc;">';
+      for (var i = 0; i < result.details.length; i++) {
+        html += '<li>' + escapeHTML(result.details[i]) + '</li>';
+      }
+      html += '</ul>';
+    } else {
+      html += '<div style="color:#aaa;">请检查电路配置后重试</div>';
+    }
+    return html;
+  }
+
+  function escapeHTML(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+  /** 移除结果通知 */
+  function removeResultNotification() {
+    var old = document.getElementById('result-notification');
+    if (old) old.remove();
+
+    // 同时移除动态绑定的下一关按钮事件（通过移除DOM即可）
+  }
+
+  // ==========================================================
+  //  8. 事件绑定（下一关按钮 — 事件委托）
+  // ==========================================================
+
+  function bindNextLevelHandler() {
+    document.addEventListener('click', function (e) {
+      if (e.target.id === 'btn-next-level') {
+        e.preventDefault();
+        loadNextLevel();
+      }
+    });
+  }
+
+  /** 注入淡入动画CSS */
+  function injectNotificationCSS() {
+    var style = document.createElement('style');
+    style.textContent = [
+      '@keyframes fadeIn {',
+      '  from { opacity: 0; transform: translateY(-6px); }',
+      '  to   { opacity: 1; transform: translateY(0); }',
+      '}'
+    ].join('\n');
+    document.head.appendChild(style);
+  }
+
+  // ==========================================================
+  //  9. 与 CircuitRunner 集成
+  // ==========================================================
+
+  /**
+   * 包装 CircuitRunner.runCircuit，在动画结束后自动判定目标
+   * 调用方应使用此函数替代直接调用 CircuitRunner.runCircuit()
+   */
+  async function runCircuitWithCheck() {
+    if (typeof CircuitRunner === 'undefined') return;
+
+    // 先移除旧通知
+    removeResultNotification();
+
+    // 运行电路（含动画）
+    await CircuitRunner.runCircuit();
+
+    // 动画结束后获取结果进行判定
+    // 等待一小段时间确保最终态已保存
+    await sleep(100);
+
+    var state = CircuitRunner.getLastRunState();
+    if (!state) return; // 空电路或动画被中断
+
+    var probs = QuantumSimulator.getProbabilities(state);
+    evaluateResult(probs, state);
+  }
+
+  function sleep(ms) {
+    return new Promise(function (resolve) {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  // ==========================================================
+  // 10. 初始化
+  // ==========================================================
+
+  /**
+   * 初始化关卡系统
+   * 调用时机：DOMContentLoaded 之后，CircuitGrid.init() 之后
+   */
+  function init() {
+    injectNotificationCSS();
+    bindNextLevelHandler();
+
+    // 从 localStorage 恢复进度
+    var storedLevel = getStoredLevel();
+    currentLevelId = Math.min(storedLevel, LEVELS.length);
+
+    // 加载当前关卡（配置门锁定 + 更新UI）
+    loadLevel(currentLevelId);
+
+    // 首次进入：显示教学引导
+    if (!isTutorialRead()) {
+      showTutorialOnFirstVisit();
+    }
+
+    // 包装运行按钮：用带判定的版本替换
+    overrideRunButton();
+  }
+
+  /** 首次访问时显示教学引导弹窗 */
+  function showTutorialOnFirstVisit() {
+    setTimeout(function () {
+      var modal = document.getElementById('modal-tutorial');
+      if (modal) {
+        modal.classList.add('active');
+        setTutorialRead(true);
+      }
+    }, 600);
+  }
+
+  /**
+   * 覆盖"运行电路"按钮的行为，使运行后自动判定目标
+   * 不修改 CircuitRunner 源码，通过事件监听器优先级实现
+   */
+  function overrideRunButton() {
+    var runBtn = document.getElementById('btn-run');
+    if (!runBtn) return;
+
+    // 移除旧监听器的最简方式：克隆替换
+    var newBtn = runBtn.cloneNode(true);
+    runBtn.parentNode.replaceChild(newBtn, runBtn);
+
+    newBtn.addEventListener('click', function () {
+      if (typeof CircuitRunner !== 'undefined' && CircuitRunner.isAnimating &&
+          CircuitRunner.isAnimating()) {
+        return;
+      }
+      runCircuitWithCheck();
+    });
+  }
+
+  // ==========================================================
+  //  公开API
+  // ==========================================================
+
+  window.LevelManager = {
+    // 初始化
+    init: init,
+
+    // 关卡数据（只读引用）
+    LEVELS: LEVELS,
+
+    // 关卡操作
+    getCurrentLevel: getCurrentLevel,
+    loadLevel: loadLevel,
+    loadNextLevel: loadNextLevel,
+
+    // 判定
+    checkGoal: checkGoal,
+    evaluateResult: evaluateResult,
+    runCircuitWithCheck: runCircuitWithCheck,
+
+    // 进度存储
+    getStoredLevel: getStoredLevel,
+    setStoredLevel: setStoredLevel,
+    getCompletedLevels: getCompletedLevels,
+    markLevelCompleted: markLevelCompleted,
+    isGalleryRead: isGalleryRead,
+    setGalleryRead: setGalleryRead,
+    isTutorialRead: isTutorialRead,
+    setTutorialRead: setTutorialRead,
+
+    // 重置
+    resetAllProgress: resetAllProgress,
+
+    // 关卡引导
+    showLevelIntroModal: showLevelIntroModal,
+    isIntroShown: isIntroShown,
+    markIntroShown: markIntroShown,
+
+    // UI
+    updateGoalCard: updateGoalCard,
+    showResultNotification: showResultNotification,
+    removeResultNotification: removeResultNotification
+  };
+
+})();
+
+// ============================================================
+// 第5部分结束，等待主入口文件串联并初始化所有模块
+// ============================================================
+
+  </script>
+  <script>
+// ============================================================
+// 第6部分：教学引导与图鉴系统（最终部分）
+// 包含：首次引导弹窗、量子门图鉴、提示功能、移动端适配、
+//        所有模块的集成初始化、KaTeX 公式渲染
+// ============================================================
+
+/**
+ * 全局 KaTeX 公式渲染函数
+ * 将文本中的 $$...$$（块级）和 $...$（行内）LaTeX 公式转为 HTML
+ * 若 KaTeX 未加载则回退为斜体文本
+ */
+window.renderMath = function (text) {
+  if (typeof katex === 'undefined') {
+    return text.replace(/\$\$(.*?)\$\$/g, '<i>$1</i>')
+               .replace(/\$(.*?)\$/g, '<i>$1</i>');
+  }
+  // 先处理 $$...$$ 块级公式
+  var result = text.replace(/\$\$([\s\S]*?)\$\$/g, function (match, formula) {
+    try {
+      return katex.renderToString(formula.trim(), { displayMode: true, throwOnError: false });
+    } catch (e) {
+      return '<span style="color:#e74c3c;">[公式错误]</span>';
+    }
+  });
+  // 再处理 $...$ 行内公式（避免匹配 $$ 中的）
+  result = result.replace(/(^|[^$])\$([^$]+)\$/g, function (match, before, formula) {
+    try {
+      return before + katex.renderToString(formula.trim(), { displayMode: false, throwOnError: false });
+    } catch (e) {
+      return before + '<span style="color:#e74c3c;">[公式错误]</span>';
+    }
+  });
+  return result;
+};
+
+(function () {
+  'use strict';
+
+  // ==========================================================
+  //  补充 CSS（引导/图鉴/提示/移动端）
+  // ==========================================================
+  function injectStyles() {
+    var css = [
+      /* ---- 多页引导 ---- */
+      '.tutorial-page { display: none; }',
+      '.tutorial-page.active { display: block; animation: fadeSlideIn 0.35s ease; }',
+      '@keyframes fadeSlideIn {',
+      '  from { opacity: 0; transform: translateY(12px); }',
+      '  to   { opacity: 1; transform: translateY(0); }',
+      '}',
+      '.tutorial-dots { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }',
+      '.tutorial-dots .dot {',
+      '  width: 10px; height: 10px; border-radius: 50%;',
+      '  background: #444; transition: background 0.2s;',
+      '}',
+      '.tutorial-dots .dot.active { background: #00bcd4; }',
+      '.tutorial-nav { display: flex; justify-content: space-between; align-items: center; }',
+      '.tutorial-nav button {',
+      '  padding: 8px 20px; border: 1px solid #444; border-radius: 6px;',
+      '  background: #1a1a2e; color: #ccc; cursor: pointer; font-size: 14px;',
+      '}',
+      '.tutorial-nav button:hover { border-color: #00bcd4; color: #fff; }',
+      '.tutorial-nav button:disabled { opacity: 0.3; cursor: default; }',
+      '.tutorial-nav button.btn-start {',
+      '  background: #2ecc71; border-color: #2ecc71; color: #fff; font-weight: 700;',
+      '}',
+
+      /* ---- 图鉴标签页 ---- */
+      '.glossary-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 2px solid #2a2a4a; }',
+      '.glossary-tabs .tab-btn {',
+      '  padding: 6px 11px; border: none; background: transparent;',
+      '  color: #888; cursor: pointer; font-size: 13px; white-space: nowrap;',
+      '  border-bottom: 2px solid transparent; margin-bottom: -2px;',
+      '  transition: color 0.2s, border-color 0.2s;',
+      '}',
+      '.glossary-tabs .tab-btn.active { color: #00bcd4; border-bottom-color: #00bcd4; }',
+      /* ---- 图鉴分页系统 ---- */
+      '.glossary-page-content { min-height: 220px; line-height: 1.65; }',
+      '.glossary-page-content p { margin-bottom: 8px; color: #ccc; }',
+      '.glossary-dots { display: flex; gap: 8px; justify-content: center; margin: 14px 0; }',
+      '.glossary-dots .glossary-dot {',
+      '  width: 9px; height: 9px; border-radius: 50%;',
+      '  background: #444; cursor: pointer; transition: background 0.2s;',
+      '}',
+      '.glossary-dots .glossary-dot.active { background: #00bcd4; }',
+      '.glossary-nav { display: flex; justify-content: space-between; align-items: center; }',
+      '.glossary-nav button {',
+      '  padding: 7px 16px; border: 1px solid #444; border-radius: 6px;',
+      '  background: #1a1a2e; color: #ccc; cursor: pointer; font-size: 13px;',
+      '}',
+      '.glossary-nav button:hover { border-color: #00bcd4; color: #fff; }',
+      '.glossary-nav button:disabled { opacity: 0.3; cursor: default; }',
+
+      /* ---- 门卡片 ---- */
+      '.gate-card {',
+      '  display: flex; align-items: center; gap: 14px;',
+      '  padding: 12px; margin-bottom: 10px;',
+      '  background: #1a1a2e; border-radius: 8px;',
+      '  border: 1px solid #2a2a4a;',
+      '  transition: border-color 0.2s;',
+      '}',
+      '.gate-card:hover { border-color: #4444aa; }',
+      '.gate-card.unlocked { border-left: 3px solid #2ecc71; }',
+      '.gate-card.locked-card { border-left: 3px solid #555; opacity: 0.55; }',
+      '.gate-card .card-symbol {',
+      '  flex-shrink: 0; width: 52px; height: 52px;',
+      '  display: flex; align-items: center; justify-content: center;',
+      '  border-radius: 8px; position: relative;',
+      '}',
+      '.gate-card .card-info { flex: 1; }',
+      '.gate-card .card-name { font-weight: 700; font-size: 15px; }',
+      '.gate-card .card-desc { font-size: 12px; color: #888; margin-top: 2px; }',
+      '.gate-card .card-status {',
+      '  font-size: 11px; padding: 2px 8px; border-radius: 4px;',
+      '}',
+      '.gate-card .card-status.avail { background: rgba(46,204,113,0.2); color: #2ecc71; }',
+      '.gate-card .card-status.locked { background: rgba(100,100,100,0.2); color: #777; }',
+
+      /* ---- 纯CSS门符号 ---- */
+      '.gate-symbol-css {',
+      '  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;',
+      '  font-weight: 700; font-size: 18px; border-radius: 6px;',
+      '}',
+      '.gate-symbol-css.gate-h { border: 2px solid #00bcd4; color: #00bcd4; }',
+      '.gate-symbol-css.gate-x {',
+      '  border: 2px solid #e74c3c; border-radius: 50%; color: #e74c3c;',
+      '}',
+      '.gate-symbol-css.gate-y { border: 2px solid #f39c12; color: #f39c12; }',
+      '.gate-symbol-css.gate-z { border: 2px solid #f1c40f; color: #f1c40f; }',
+      '.gate-symbol-css.gate-s { border: 2px solid #1abc9c; color: #1abc9c; }',
+      /* CNOT: 竖线连接 • 和 ⊕ */
+      '.gate-symbol-cnot {',
+      '  width: 40px; height: 70px; display: flex; flex-direction: column;',
+      '  align-items: center; justify-content: space-between; position: relative;',
+      '}',
+      '.gate-symbol-cnot::before {',
+      '  content: ""; position: absolute; left: 50%; top: 8px; bottom: 8px;',
+      '  width: 2px; background: #9b59b6; transform: translateX(-50%);',
+      '}',
+      '.gate-symbol-cnot .cnot-top {',
+      '  width: 12px; height: 12px; border-radius: 50%; background: #9b59b6; z-index: 1;',
+      '}',
+      '.gate-symbol-cnot .cnot-bot {',
+      '  width: 24px; height: 24px; border-radius: 50%;',
+      '  border: 2px solid #9b59b6; z-index: 1;',
+      '}',
+
+      /* ---- 提示弹窗 ---- */
+      '.hint-answer {',
+      '  margin-top: 14px; padding: 12px; background: #111122;',
+      '  border-radius: 6px; border: 1px solid #2a2a4a;',
+      '  display: none;',
+      '}',
+      '.hint-answer.visible { display: block; }',
+      '.hint-answer pre {',
+      '  color: #00bcd4; font-family: Consolas, monospace;',
+      '  font-size: 13px; line-height: 1.6; margin: 0; white-space: pre;',
+      '}',
+
+      /* ---- 移动端适配 ---- */
+      '@media (max-width: 767px) {',
+      '  .gate-btn .shortcut-label {',
+      '    font-size: 9px; color: #666;',
+      '  }',
+      '  #bottombar .btn-run {',
+      '    padding: 10px 24px; font-size: 16px;',
+      '  }',
+      '  #bottombar .bar-left { gap: 6px; }',
+      '  .modal-dialog {',
+      '    min-width: auto; max-width: 92vw; margin: 10px;',
+      '  }',
+      '}'
+    ].join('\n');
+
+    var style = document.createElement('style');
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  // ==========================================================
+  //  1. 首次引导弹窗（多页）
+  // ==========================================================
+
+  var tutorialPages = [
+    {
+      title: '欢迎来到量子世界',
+      content: [
+        '<p>量子计算使用<strong style="color:#00bcd4;">量子比特（qubit）</strong>来存储和处理信息。</p>',
+        '<p>与经典比特只能是 0 或 1 不同，一个量子比特可以同时处于 <strong style="color:#f1c40f;">|0⟩ 和 |1⟩ 的叠加态</strong>。</p>',
+        '<p style="margin-top:12px;">在 "Turing Quamplete" 中，你将通过<strong>放置量子门</strong>来操控两个量子比特，',
+        '完成一系列越来越有挑战性的关卡。</p>'
+      ].join('\n')
+    },
+    {
+      title: '叠加态与测量',
+      content: [
+        '<p>量子比特最常见的叠加态是 <strong style="color:#00bcd4;">Hadamard 叠加</strong>：</p>',
+        '<div>$$H|0\\rangle = \\frac{|0\\rangle + |1\\rangle}{\\sqrt{2}}$$</div>',
+        '<p>当我们<strong style="color:#e74c3c;">测量</strong>这个量子比特时，有 50% 概率得到 |0⟩，50% 概率得到 |1⟩。</p>',
+        '<p style="margin-top:12px;color:#888;">运行电路后，右侧面板会显示各基态的测量概率。</p>'
+      ].join('\n')
+    },
+    {
+      title: '操作指南',
+      content: [
+        '<p>电路网格有两条线：<strong style="color:#00bcd4;">q₀</strong>（上线）和 <strong style="color:#f39c12;">q₁</strong>（下线）。</p>',
+        '<p>在双量子比特系统中，<strong>q₀ 是高位（第一量子比特）</strong>，<strong>q₁ 是低位（第二量子比特）</strong>。</p>',
+        '<p>基态 |q₀ q₁⟩ 中，q₀ 写在前面：<strong>|00⟩, |01⟩, |10⟩, |11⟩</strong></p>',
+        '<p style="margin-top:12px;"><strong>① 选择量子门</strong>：点击左侧面板的门按钮（或按数字键 1-6）</p>',
+        '<p><strong>② 放置到网格</strong>：点击电路网格的单元格放置门',
+        '<br><span style="color:#888;">&nbsp;&nbsp;&nbsp;单比特门放在某一行，CNOT 点击任意一行占据整列（控制=q₀，目标=q₁）</span></p>',
+        '<p><strong>③ 运行电路</strong>：点击底部绿色"运行电路"按钮（或按 Enter）</p>',
+        '<p><strong>④ 观察结果</strong>：右侧面板显示态向量和概率分布</p>',
+        '<p style="margin-top:8px;color:#888;">右键单元格可删除已放置的门。空电路时态矢量实时显示为 |00⟩。</p>'
+      ].join('\n')
+    },
+    {
+      title: '准备开始',
+      content: [
+        '<p style="text-align:center;font-size:48px;margin:16px 0;">⚛️</p>',
+        '<p style="text-align:center;font-size:16px;">你已经掌握了基础知识！</p>',
+        '<p style="text-align:center;color:#888;">共 8 个关卡，从简单叠加态到相位操控。</p>',
+        '<p style="text-align:center;color:#f1c40f;">准备好了吗？</p>'
+      ].join('\n')
+    }
+  ];
+
+  var currentTutorialPage = 0;
+
+  function buildTutorialHTML() {
+    var modal = document.getElementById('modal-tutorial');
+    if (!modal) return;
+
+    var dialog = modal.querySelector('.modal-dialog');
+    if (!dialog) return;
+
+    // 页面内容
+    var pagesHTML = '';
+    for (var i = 0; i < tutorialPages.length; i++) {
+      var activeClass = (i === 0) ? ' active' : '';
+      pagesHTML += '<div class="tutorial-page' + activeClass + '" data-page="' + i + '">';
+      pagesHTML += '<h3 style="color:#00bcd4;margin-bottom:10px;">' + tutorialPages[i].title + '</h3>';
+      pagesHTML += window.renderMath(tutorialPages[i].content);
+      pagesHTML += '</div>';
+    }
+
+    // 页码指示器
+    var dotsHTML = '<div class="tutorial-dots">';
+    for (var d = 0; d < tutorialPages.length; d++) {
+      dotsHTML += '<span class="dot' + (d === 0 ? ' active' : '') + '" data-dot="' + d + '"></span>';
+    }
+    dotsHTML += '</div>';
+
+    // 导航按钮
+    var isLast = tutorialPages.length - 1;
+    var navHTML = '<div class="tutorial-nav">';
+    navHTML += '<button id="tutorial-prev" disabled>← 上一页</button>';
+    navHTML += '<span style="color:#888;font-size:12px;">' + (1) + ' / ' + tutorialPages.length + '</span>';
+    if (currentTutorialPage === isLast) {
+      navHTML += '<button id="tutorial-next" class="btn-start">开始游戏</button>';
+    } else {
+      navHTML += '<button id="tutorial-next">下一页 →</button>';
+    }
+    navHTML += '</div>';
+
+    // 组装
+    var body = dialog.querySelector('.modal-body');
+    if (body) {
+      body.innerHTML = pagesHTML + dotsHTML + navHTML;
+    }
+
+    // 更新标题
+    var title = dialog.querySelector('.modal-title');
+    if (title) title.textContent = '🎓 教学引导';
+  }
+
+  function navigateTutorial(direction) {
+    var total = tutorialPages.length;
+    var newPage = currentTutorialPage + direction;
+    if (newPage < 0 || newPage >= total) return;
+
+    // 切换页面
+    var pages = document.querySelectorAll('#modal-tutorial .tutorial-page');
+    for (var i = 0; i < pages.length; i++) {
+      pages[i].classList.remove('active');
+    }
+    if (pages[newPage]) pages[newPage].classList.add('active');
+
+    // 更新页码指示器
+    var dots = document.querySelectorAll('#modal-tutorial .dot');
+    for (var j = 0; j < dots.length; j++) {
+      dots[j].classList.remove('active');
+    }
+    if (dots[newPage]) dots[newPage].classList.add('active');
+
+    currentTutorialPage = newPage;
+
+    // 更新导航按钮
+    var prevBtn = document.getElementById('tutorial-prev');
+    var nextBtn = document.getElementById('tutorial-next');
+    if (prevBtn) prevBtn.disabled = (newPage === 0);
+
+    var isLast = (newPage === total - 1);
+    if (nextBtn) {
+      if (isLast) {
+        nextBtn.textContent = '开始游戏';
+        nextBtn.className = 'btn-start';
+      } else {
+        nextBtn.textContent = '下一页 →';
+        nextBtn.className = '';
+      }
+    }
+  }
+
+  function bindTutorialEvents() {
+    // 委托事件
+    document.addEventListener('click', function (e) {
+      if (e.target.id === 'tutorial-prev') {
+        navigateTutorial(-1);
+      }
+      if (e.target.id === 'tutorial-next') {
+        var isLast = (currentTutorialPage === tutorialPages.length - 1);
+        if (isLast) {
+          // 关闭弹窗
+          var modal = document.getElementById('modal-tutorial');
+          if (modal) modal.classList.remove('active');
+          // 标记已读
+          if (typeof LevelManager !== 'undefined') {
+            LevelManager.setTutorialRead(true);
+          }
+        } else {
+          navigateTutorial(1);
+        }
+      }
+      // 页码点点击
+      if (e.target.classList.contains('dot')) {
+        var targetPage = parseInt(e.target.getAttribute('data-dot'), 10);
+        if (!isNaN(targetPage)) {
+          navigateTutorial(targetPage - currentTutorialPage);
+        }
+      }
+    });
+  }
+
+  /** 打开引导弹窗并重置到第1页 */
+  function openTutorial() {
+    buildTutorialHTML();
+    currentTutorialPage = 0;
+    var modal = document.getElementById('modal-tutorial');
+    if (modal) modal.classList.add('active');
+  }
+
+  // ==========================================================
+  //  2. 量子门图鉴
+  // ==========================================================
+
+  // ==========================================================
+  //  图鉴数据："量子计算基础"6页
+  // ==========================================================
+  var basicsPages = [
+    {
+      title: '量子态与量子比特',
+      content: [
+        '<p>经典计算机使用<strong>比特（bit）</strong>存储信息，每个比特只能是 <strong>0</strong> 或 <strong>1</strong>。</p>',
+        '<p>量子计算机使用<strong style="color:#00bcd4;">量子比特（qubit）</strong>，它可以处于 0 和 1 的<strong>任意线性组合</strong>：</p>',
+        '<div>$$|\\psi\\rangle = \\alpha|0\\rangle + \\beta|1\\rangle$$</div>',
+        '<p>其中 $\\alpha$ 和 $\\beta$ 是<strong style="color:#f1c40f;">复数振幅</strong>，满足归一化条件：</p>',
+        '<div>$$|\\alpha|^2 + |\\beta|^2 = 1$$</div>',
+        '<p>$|0\\rangle$ 和 $|1\\rangle$ 称为<strong>计算基矢</strong>，使用 <strong>Dirac 符号</strong>（bra-ket）表示。</p>',
+        '<p style="color:#888;margin-top:8px;">直观理解：经典比特像一枚硬币（正面或反面），量子比特像一个旋转中的球——它同时朝向所有方向，直到被测量。</p>'
+      ].join('\n')
+    },
+    {
+      title: '量子门基础',
+      content: [
+        '<p><strong style="color:#00bcd4;">量子门</strong>是对量子比特施加的<strong>酉变换（unitary transformation）</strong>。</p>',
+        '<p>每个量子门对应一个<strong>酉矩阵</strong> $U$，满足 $U^\\dagger U = I$。这意味着量子门操作<strong>可逆</strong>——信息不会丢失。</p>',
+        '<p>单量子比特门是 $2 \\times 2$ 的酉矩阵，作用于单个量子比特的态向量：</p>',
+        '<div>$$|\\psi\'\\rangle = U|\\psi\\rangle = \\begin{pmatrix} u_{00} & u_{01} \\\\ u_{10} & u_{11} \\end{pmatrix} \\begin{pmatrix} \\alpha \\\\ \\beta \\end{pmatrix}$$</div>',
+        '<p>在<strong style="color:#f1c40f;">Bloch 球面</strong>上，单量子比特门对应绕某个轴的旋转。例如 X 门绕 X 轴旋转 $\\pi$。</p>',
+        '<p style="color:#888;">在游戏中，你通过放置门来逐步变换量子态，最终达成关卡目标。</p>'
+      ].join('\n')
+    },
+    {
+      title: '叠加态原理',
+      content: [
+        '<p><strong style="color:#00bcd4;">叠加态</strong>是量子计算区别于经典计算的核心特性。</p>',
+        '<p>Hadamard 门创建最基础的叠加态：</p>',
+        '<div>$$H|0\\rangle = \\frac{|0\\rangle + |1\\rangle}{\\sqrt{2}}$$</div>',
+        '<p>在叠加态中，量子比特<strong>同时</strong>处于 |0⟩ 和 |1⟩。测量时，每种结果以 $|\\text{振幅}|^2$ 的概率出现。</p>',
+        '<p>对于 $\\frac{|0\\rangle+|1\\rangle}{\\sqrt{2}}$：</p>',
+        '<ul style="color:#aaa;margin-left:16px;">',
+        '<li>$P(|0\\rangle) = |\\frac{1}{\\sqrt{2}}|^2 = 50\\%$</li>',
+        '<li>$P(|1\\rangle) = |\\frac{1}{\\sqrt{2}}|^2 = 50\\%$</li>',
+        '</ul>',
+        '<p style="color:#888;margin-top:8px;">两个量子比特可以各自独立叠加，也可以纠缠在一起——这是下一章的主题。</p>'
+      ].join('\n')
+    },
+    {
+      title: '量子纠缠',
+      content: [
+        '<p>当两个量子比特的态<strong>无法分解</strong>为各自态的乘积时，它们处于<strong style="color:#9b59b6;">纠缠态</strong>。</p>',
+        '<p>最著名的纠缠态是 <strong>Bell 态</strong>：</p>',
+        '<div>$$|\\Phi^+\\rangle = \\frac{|00\\rangle + |11\\rangle}{\\sqrt{2}}$$</div>',
+        '<p>Bell 态的创建方法：</p>',
+        '<p style="text-align:center;color:#f1c40f;">H 门（创建叠加）→ CNOT 门（产生纠缠）</p>',
+        '<p><strong style="color:#e74c3c;">纠缠的特性</strong>：测量其中一个量子比特会<strong>瞬间</strong>决定另一个的状态。如果测得 q₀ = |0⟩，则 q₁ 必定也是 |0⟩。</p>',
+        '<p style="color:#888;">这并非超光速通信——纠缠是量子态非定域性的体现，是量子信息处理的核心资源。</p>'
+      ].join('\n')
+    },
+    {
+      title: '量子测量',
+      content: [
+        '<p>对量子态进行<strong style="color:#e74c3c;">测量</strong>时，叠加态会<strong>坍缩</strong>到某个基矢。</p>',
+        '<p><strong>玻恩规则（Born Rule）</strong>：测量得到基矢 $|i\\rangle$ 的概率为振幅模平方：</p>',
+        '<div>$$P(|i\\rangle) = |\\langle i|\\psi\\rangle|^2 = |\\alpha_i|^2$$</div>',
+        '<p>测量后的态变为测量结果对应的基矢（<strong>投影测量</strong>）。</p>',
+        '<p>在双量子比特系统中，测量结果为 $|00\\rangle, |01\\rangle, |10\\rangle, |11\\rangle$ 之一，概率和为 1。</p>',
+        '<p style="color:#888;">在游戏中，运行电路后右侧面板显示各基态的测量概率。</p>'
+      ].join('\n')
+    },
+    {
+      title: 'Bloch 球面',
+      content: [
+        '<p><strong style="color:#00bcd4;">Bloch 球面</strong>是单量子比特态的几何可视化表示。</p>',
+        '<p>任意单量子比特态可写为：</p>',
+        '<div>$$|\\psi\\rangle = \\cos\\frac{\\theta}{2}|0\\rangle + e^{i\\phi}\\sin\\frac{\\theta}{2}|1\\rangle$$</div>',
+        '<p>其中 $\\theta$（极角）和 $\\phi$（方位角）定义了球面上的一个点：</p>',
+        '<ul style="color:#aaa;margin-left:16px;">',
+        '<li><strong>北极</strong> ($\\theta=0$)：$|0\\rangle$ 态</li>',
+        '<li><strong>南极</strong> ($\\theta=\\pi$)：$|1\\rangle$ 态</li>',
+        '<li><strong>赤道</strong> ($\\theta=\\pi/2$)：均匀叠加态</li>',
+        '</ul>',
+        '<p>量子门对应球面上的<strong>旋转</strong>。X/Y/Z 门分别绕 X/Y/Z 轴旋转 $\\pi$。</p>',
+        '<p style="color:#888;">注意：纠缠态无法在单个 Bloch 球面上表示——它涉及两个量子比特间的关联。</p>'
+      ].join('\n')
+    }
+  ];
+
+  // ==========================================================
+  //  图鉴数据："量子门图鉴"6页（每门一页）
+  // ==========================================================
+  var gatePages = [
+    {
+      symbol: 'H', name: 'Hadamard 门', cssClass: 'gate-h',
+      content: [
+        '<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">',
+        '<div class="gate-symbol-css gate-h" style="flex-shrink:0;width:48px;height:48px;font-size:20px;">H</div>',
+        '<div><strong style="font-size:16px;color:#00bcd4;">Hadamard 门 (H)</strong>',
+        '<br><span style="color:#888;font-size:12px;">叠加态创建者</span></div>',
+        '</div>',
+        '<div>$$H = \\frac{1}{\\sqrt{2}}\\begin{pmatrix}1 & 1 \\\\ 1 & -1\\end{pmatrix}$$</div>',
+        '<p><strong>操作：</strong></p>',
+        '<ul style="color:#ccc;margin-left:16px;font-size:13px;">',
+        '<li>$H|0\\rangle = \\frac{|0\\rangle+|1\\rangle}{\\sqrt{2}}$ — 创建均匀叠加</li>',
+        '<li>$H|1\\rangle = \\frac{|0\\rangle-|1\\rangle}{\\sqrt{2}}$ — 相对于负相位的叠加</li>',
+        '</ul>',
+        '<p><strong>重要性质：</strong>$H^2 = I$（自身逆），两次 H 操作回到原态。</p>',
+        '<p style="color:#888;">H 门在 Bloch 球面上绕 (X+Z)/√2 轴旋转 π，将极点态旋转到赤道面。</p>',
+        '<p style="color:#f39c12;margin-top:6px;font-size:12px;">🔗 关系：H² = I（自身逆）| HZH = X | HXH = Z</p>'
+      ].join('\n')
+    },
+    {
+      symbol: 'X', name: 'Pauli-X 门', cssClass: 'gate-x',
+      content: [
+        '<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">',
+        '<div class="gate-symbol-css gate-x" style="flex-shrink:0;width:48px;height:48px;font-size:20px;">X</div>',
+        '<div><strong style="font-size:16px;color:#e74c3c;">Pauli-X 门 (X)</strong>',
+        '<br><span style="color:#888;font-size:12px;">量子 NOT 门 / 比特翻转</span></div>',
+        '</div>',
+        '<div>$$X = \\begin{pmatrix}0 & 1 \\\\ 1 & 0\\end{pmatrix}$$</div>',
+        '<p><strong>操作：</strong></p>',
+        '<ul style="color:#ccc;margin-left:16px;font-size:13px;">',
+        '<li>$X|0\\rangle = |1\\rangle$ — 翻转为 |1⟩</li>',
+        '<li>$X|1\\rangle = |0\\rangle$ — 翻转为 |0⟩</li>',
+        '</ul>',
+        '<p><strong>重要性质：</strong>$X^2 = I$，是经典 NOT 门的量子推广。</p>',
+        '<p style="color:#888;">在 Bloch 球面上绕 X 轴旋转 π，交换北极和南极的位置。</p>',
+        '<p style="color:#f39c12;margin-top:6px;font-size:12px;">🔗 关系：X² = I | X = HZH（H 和 Z 组合可得 X）</p>'
+      ].join('\n')
+    },
+    {
+      symbol: 'Y', name: 'Pauli-Y 门', cssClass: 'gate-y',
+      content: [
+        '<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">',
+        '<div class="gate-symbol-css gate-y" style="flex-shrink:0;width:48px;height:48px;font-size:20px;">Y</div>',
+        '<div><strong style="font-size:16px;color:#f39c12;">Pauli-Y 门 (Y)</strong>',
+        '<br><span style="color:#888;font-size:12px;">比特+相位翻转</span></div>',
+        '</div>',
+        '<div>$$Y = \\begin{pmatrix}0 & -i \\\\ i & 0\\end{pmatrix}$$</div>',
+        '<p><strong>操作：</strong></p>',
+        '<ul style="color:#ccc;margin-left:16px;font-size:13px;">',
+        '<li>$Y|0\\rangle = i|1\\rangle$ — 翻转并添加虚数相位</li>',
+        '<li>$Y|1\\rangle = -i|0\\rangle$ — 翻转并添加负虚数相位</li>',
+        '</ul>',
+        '<p><strong>重要性质：</strong>$Y = iXZ$，同时执行比特翻转和相位翻转。</p>',
+        '<p style="color:#888;">在 Bloch 球面上绕 Y 轴旋转 π，同时引入复数振幅——这是 X 或 Z 门单独无法实现的。</p>',
+        '<p style="color:#f39c12;margin-top:6px;font-size:12px;">🔗 关系：Y² = I | Y = iXZ（X 和 Z 的乘积，带虚数因子）</p>'
+      ].join('\n')
+    },
+    {
+      symbol: 'Z', name: 'Pauli-Z 门', cssClass: 'gate-z',
+      content: [
+        '<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">',
+        '<div class="gate-symbol-css gate-z" style="flex-shrink:0;width:48px;height:48px;font-size:20px;">Z</div>',
+        '<div><strong style="font-size:16px;color:#f1c40f;">Pauli-Z 门 (Z)</strong>',
+        '<br><span style="color:#888;font-size:12px;">相位翻转门</span></div>',
+        '</div>',
+        '<div>$$Z = \\begin{pmatrix}1 & 0 \\\\ 0 & -1\\end{pmatrix}$$</div>',
+        '<p><strong>操作：</strong></p>',
+        '<ul style="color:#ccc;margin-left:16px;font-size:13px;">',
+        '<li>$Z|0\\rangle = |0\\rangle$ — 不变</li>',
+        '<li>$Z|1\\rangle = -|1\\rangle$ — 相位翻转（乘以 -1）</li>',
+        '</ul>',
+        '<p><strong>重要性质：</strong>Z 门只改变相位，<strong>不改变测量概率</strong>。$Z^2 = I$。</p>',
+        '<p style="color:#888;">在 Bloch 球面上绕 Z 轴旋转 π。配合 H 门可产生干涉效应（如 HZH = X）。</p>',
+        '<p style="color:#f39c12;margin-top:6px;font-size:12px;">🔗 关系：Z² = I | Z = S²（两个 S 门等于一个 Z 门）| S⁴ = I</p>'
+      ].join('\n')
+    },
+    {
+      symbol: 'S', name: 'S 门（相位门）', cssClass: 'gate-s',
+      content: [
+        '<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">',
+        '<div class="gate-symbol-css gate-s" style="flex-shrink:0;width:48px;height:48px;font-size:20px;">S</div>',
+        '<div><strong style="font-size:16px;color:#1abc9c;">S 门 / 相位门</strong>',
+        '<br><span style="color:#888;font-size:12px;">π/2 相位旋转 / √Z 门</span></div>',
+        '</div>',
+        '<div>$$S = \\begin{pmatrix}1 & 0 \\\\ 0 & i\\end{pmatrix}$$</div>',
+        '<p><strong>操作：</strong></p>',
+        '<ul style="color:#ccc;margin-left:16px;font-size:13px;">',
+        '<li>$S|0\\rangle = |0\\rangle$ — 不变</li>',
+        '<li>$S|1\\rangle = i|1\\rangle$ — 乘以虚数单位 i</li>',
+        '</ul>',
+        '<p><strong>重要性质：</strong>$S^2 = Z$（连续两次 S 等于一次 Z）。也称为 P 门或 $\\sqrt{Z}$ 门。</p>',
+        '<p style="color:#888;">S 门施加 $\\pi/2$ 的相位旋转，在构建 T 门和其他相位操作中非常重要。</p>',
+        '<p style="color:#f39c12;margin-top:6px;font-size:12px;">🔗 关系：S² = Z | S⁴ = I | S³ = S†（逆 S 门）| S† = S⁻¹ = S³</p>'
+      ].join('\n')
+    },
+    {
+      symbol: 'CNOT', name: '受控非门', cssClass: 'cnot',
+      content: [
+        '<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">',
+        '<div class="gate-symbol-cnot" style="flex-shrink:0;width:30px;height:56px;">',
+        '<div class="cnot-top"></div><div class="cnot-bot"></div>',
+        '</div>',
+        '<div><strong style="font-size:16px;color:#9b59b6;">受控非门 (CNOT)</strong>',
+        '<br><span style="color:#888;font-size:12px;">双量子比特门 / 纠缠生成器</span></div>',
+        '</div>',
+        '<div>$$\\text{CNOT} = \\begin{pmatrix}1 & 0 & 0 & 0 \\\\ 0 & 1 & 0 & 0 \\\\ 0 & 0 & 0 & 1 \\\\ 0 & 0 & 1 & 0\\end{pmatrix}$$</div>',
+        '<p><strong>操作：</strong>若控制位（上侧的 q₀）为 |1⟩，则翻转目标位（下侧的 q₁）：</p>',
+        '<ul style="color:#ccc;margin-left:16px;font-size:13px;">',
+        '<li>$\\text{CNOT}|00\\rangle = |00\\rangle$</li>',
+        '<li>$\\text{CNOT}|10\\rangle = |11\\rangle$（控制=1，翻转目标）</li>',
+        '</ul>',
+        '<p><strong>关键用途：</strong>结合 H 门生成 Bell 态 $\\frac{|00\\rangle+|11\\rangle}{\\sqrt{2}}$。</p>',
+        '<p style="color:#888;">CNOT 是量子纠缠的核心门——没有它，两个量子比特将始终保持独立。</p>',
+        '<p style="color:#f39c12;margin-top:6px;font-size:12px;">🔗 关系：CNOT·(H⊗I)|00⟩ = Bell态 | CNOT² = I | 配合任意单比特门构成通用门集</p>'
+      ].join('\n')
+    }
+  ];
+
+  // ==========================================================
+  //  量子基础弹窗（#modal-basics）：横向tab按钮切换6页
+  // ==========================================================
+  var basicsTabLabels = ['量子比特', '量子门', '叠加态', '纠缠', '测量', 'Bloch球面'];
+  var currentBasicsTab = 0;
+
+  function buildBasicsModalHTML() {
+    var modal = document.getElementById('modal-basics');
+    if (!modal) return;
+    var body = modal.querySelector('.modal-body');
+    if (!body) return;
+
+    // 横向 tab 按钮
+    var tabsHTML = '<div class="glossary-tabs">';
+    for (var i = 0; i < basicsTabLabels.length; i++) {
+      tabsHTML += '<button class="tab-btn' + (i === currentBasicsTab ? ' active' : '') +
+                  '" data-tab-idx="' + i + '">' + basicsTabLabels[i] + '</button>';
+    }
+    tabsHTML += '</div>';
+
+    // 页面内容
+    var page = basicsPages[currentBasicsTab];
+    var contentHTML = '<div class="glossary-page-content" style="min-height:240px;">';
+    contentHTML += window.renderMath(page.content);
+    contentHTML += '</div>';
+
+    body.innerHTML = tabsHTML + contentHTML;
+  }
+
+  function switchBasicsTab(idx) {
+    currentBasicsTab = idx;
+    // 更新tab按钮状态
+    var tabs = document.querySelectorAll('#modal-basics .tab-btn');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle('active', parseInt(tabs[i].getAttribute('data-tab-idx'), 10) === idx);
+    }
+    // 更新内容
+    var contentEl = document.querySelector('#modal-basics .glossary-page-content');
+    if (contentEl && basicsPages[idx]) {
+      contentEl.innerHTML = window.renderMath(basicsPages[idx].content);
+    }
+  }
+
+  function openBasics() {
+    currentBasicsTab = 0;
+    buildBasicsModalHTML();
+    var modal = document.getElementById('modal-basics');
+    if (modal) modal.classList.add('active');
+  }
+
+  // ==========================================================
+  //  量子门图鉴弹窗（#modal-gallery）：横向tab按钮切换6门
+  // ==========================================================
+  var gateTabSymbols = ['H', 'X', 'Y', 'Z', 'S', 'CNOT'];
+  var currentGateTab = 0;
+
+  function buildGatesModalHTML() {
+    var modal = document.getElementById('modal-gallery');
+    if (!modal) return;
+    var body = modal.querySelector('.modal-body');
+    if (!body) return;
+
+    // 横向 tab 按钮（每门一个按钮，显示门符号+颜色）
+    var tabsHTML = '<div class="glossary-tabs">';
+    var colors = { H: '#00bcd4', X: '#e74c3c', Y: '#f39c12', Z: '#f1c40f', S: '#1abc9c', CNOT: '#9b59b6' };
+    for (var i = 0; i < gateTabSymbols.length; i++) {
+      var sym = gateTabSymbols[i];
+      var isActive = (i === currentGateTab);
+      var color = colors[sym] || '#fff';
+      tabsHTML += '<button class="tab-btn' + (isActive ? ' active' : '') +
+                  '" data-tab-idx="' + i + '" style="' + (isActive ? 'color:' + color + ';border-bottom-color:' + color + ';' : '') + '">' + sym + '</button>';
+    }
+    tabsHTML += '</div>';
+
+    // 页面内容
+    var page = gatePages[currentGateTab];
+    var contentHTML = '<div class="glossary-page-content" style="min-height:240px;">';
+    contentHTML += window.renderMath(page.content);
+    contentHTML += '</div>';
+
+    body.innerHTML = tabsHTML + contentHTML;
+  }
+
+  function switchGateTab(idx) {
+    currentGateTab = idx;
+    var colors = { H: '#00bcd4', X: '#e74c3c', Y: '#f39c12', Z: '#f1c40f', S: '#1abc9c', CNOT: '#9b59b6' };
+    // 更新tab按钮状态
+    var tabs = document.querySelectorAll('#modal-gallery .tab-btn');
+    for (var i = 0; i < tabs.length; i++) {
+      var isActive = (parseInt(tabs[i].getAttribute('data-tab-idx'), 10) === idx);
+      tabs[i].classList.toggle('active', isActive);
+      var sym = gateTabSymbols[i];
+      var color = colors[sym] || '#fff';
+      if (isActive) {
+        tabs[i].style.color = color;
+        tabs[i].style.borderBottomColor = color;
+      } else {
+        tabs[i].style.color = '';
+        tabs[i].style.borderBottomColor = '';
+      }
+    }
+    // 更新内容
+    var contentEl = document.querySelector('#modal-gallery .glossary-page-content');
+    if (contentEl && gatePages[idx]) {
+      contentEl.innerHTML = window.renderMath(gatePages[idx].content);
+    }
+  }
+
+  function openGates() {
+    currentGateTab = 0;
+    buildGatesModalHTML();
+    var modal = document.getElementById('modal-gallery');
+    if (modal) modal.classList.add('active');
+  }
+
+  // 事件委托：两个弹窗的tab按钮点击
+  function bindGlossaryTabEvents() {
+    document.addEventListener('click', function (e) {
+      var target = e.target;
+
+      // 量子基础弹窗的tab按钮
+      if (target.classList.contains('tab-btn') && target.closest('#modal-basics')) {
+        var idx = parseInt(target.getAttribute('data-tab-idx'), 10);
+        if (!isNaN(idx)) switchBasicsTab(idx);
+      }
+
+      // 量子门图鉴弹窗的tab按钮
+      if (target.classList.contains('tab-btn') && target.closest('#modal-gallery')) {
+        var idx2 = parseInt(target.getAttribute('data-tab-idx'), 10);
+        if (!isNaN(idx2)) switchGateTab(idx2);
+      }
+    });
+  }
+
+  // ==========================================================
+  //  3. 提示功能
+  // ==========================================================
+
+  var solutionDiagrams = {
+    1: [
+      '     t₀',
+      'q₀: ┌─┐',
+      '    │H│    ← 在 q₀ 上放置 Hadamard 门',
+      'q₁: └─┘',
+      '',
+      '结果：H|0⟩⊗|0⟩ = (|00⟩+|10⟩)/√2',
+      '|00⟩ 概率 50%，|10⟩ 概率 50%  ✓'
+    ].join('\n'),
+    2: [
+      '     t₀',
+      'q₀: ┌─┐',
+      '    │X│    ← 在 q₀ 上放置 X 门',
+      'q₁: └─┘',
+      '',
+      '结果：X|0⟩⊗|0⟩ = |10⟩',
+      '|10⟩ 概率 100%  ✓'
+    ].join('\n'),
+    3: [
+      '     t₀    t₁',
+      'q₀: ┌─┐   ●',
+      '    │H│   ║     ← H 后接 CNOT（控制=q₀，目标=q₁）',
+      'q₁: └─┘   ⊕',
+      '',
+      '结果：CNOT · (H⊗I) |00⟩ = (|00⟩+|11⟩)/√2  (Bell态)',
+      '|00⟩ 概率 50%，|11⟩ 概率 50%  ✓'
+    ].join('\n'),
+    4: [
+      '     t₀',
+      'q₀: ┌─┐',
+      '    │H│    ← 两个量子比特各放一个 H 门',
+      'q₁: │H│',
+      '    └─┘',
+      '',
+      '结果：(H⊗H)|00⟩ = (|00⟩+|01⟩+|10⟩+|11⟩)/2',
+      '四个基态各约 25% 概率  ✓'
+    ].join('\n'),
+    5: [
+      '     t₀    t₁    t₂',
+      'q₀: ┌─┐  ┌─┐  ┌─┐',
+      '    │H│  │Z│  │H│   ← HZH = X（翻转到 |1⟩）',
+      'q₁: └─┘  └─┘  └─┘',
+      '',
+      '关键：HZH = X！H创建叠加，Z翻转相位，H产生干涉',
+      '三者组合等价于一个X门，将 |0⟩ 翻转到 |1⟩',
+      '|10⟩ 概率 = 100%，同时使用了 H 和 Z 门  ✓'
+    ].join('\n'),
+    6: [
+      '     t₀    t₁',
+      'q₀: ┌─┐',
+      '    │X│         ← X 翻转 q₀ → |1⟩',
+      'q₁: └─┘  ┌─┐',
+      '          │Z│   ← Z 放在 q₁ 上（满足约束）',
+      '          └─┘',
+      '',
+      '结果：|10⟩，Z 门只改变相位不改变概率',
+      '|10⟩ 概率 100%，含 Z 门  ✓'
+    ].join('\n'),
+    7: [
+      '     t₀    t₁',
+      'q₀: ┌─┐  ┌─┐',
+      '    │Y│  │H│   ← 先 Y 后 H',
+      'q₁: └─┘  └─┘',
+      '',
+      'Y|0⟩ = i|1⟩，H(i|1⟩) = i(|0⟩-|1⟩)/√2',
+      '态向量：(i|00⟩ - i|10⟩)/√2',
+      '|10⟩ 虚部 = -1/√2 < 0  ✓'
+    ].join('\n'),
+    8: [
+      '     t₀    t₁',
+      'q₀: ┌─┐  ┌─┐',
+      '    │H│  │S│   ← 先 H 后 S',
+      'q₁: └─┘  └─┘',
+      '',
+      'H|0⟩ = (|0⟩+|1⟩)/√2，S(|0⟩+|1⟩)/√2 = (|0⟩+i|1⟩)/√2',
+      '态向量：(|00⟩ + i|10⟩)/√2',
+      '|10⟩ 虚部 = +1/√2 > 0  ✓'
+    ].join('\n')
+  };
+
+  function buildHintHTML() {
+    var modal = document.getElementById('modal-hint');
+    if (!modal) return;
+
+    var dialog = modal.querySelector('.modal-dialog');
+    if (!dialog) return;
+
+    var body = dialog.querySelector('.modal-body');
+    if (!body) return;
+
+    var level = typeof LevelManager !== 'undefined'
+      ? LevelManager.getCurrentLevel()
+      : { id: 1, name: '未知', hint: '暂无提示', description: '' };
+
+    var hintText = level.hint || '暂无提示信息。';
+    var solutionText = solutionDiagrams[level.id] || '暂无答案信息。';
+
+    body.innerHTML = [
+      '<p style="color:#f39c12;font-weight:600;">💡 第 ' + level.id + ' 关 · ' + level.name + '</p>',
+      '<p style="color:#ccc;margin-top:8px;">' + hintText + '</p>',
+      '<button id="btn-show-answer" style="',
+      '  margin-top:12px; padding:6px 16px; border:1px solid #f39c12;',
+      '  border-radius:6px; background:transparent; color:#f39c12;',
+      '  cursor:pointer; font-size:13px;',
+      '">🔍 查看答案</button>',
+      '<div class="hint-answer" id="hint-answer-box">',
+      '<p style="color:#888;font-size:12px;margin-bottom:6px;">正确放置方案：</p>',
+      '<pre>' + solutionText + '</pre>',
+      '</div>'
+    ].join('\n');
+  }
+
+  function bindHintEvents() {
+    document.addEventListener('click', function (e) {
+      if (e.target.id === 'btn-show-answer') {
+        var box = document.getElementById('hint-answer-box');
+        if (box) {
+          box.classList.toggle('visible');
+          e.target.textContent = box.classList.contains('visible')
+            ? '🔼 隐藏答案'
+            : '🔍 查看答案';
+        }
+      }
+    });
+  }
+
+  function openHint() {
+    buildHintHTML();
+    var modal = document.getElementById('modal-hint');
+    if (modal) modal.classList.add('active');
+  }
+
+  // ==========================================================
+  //  4. 移动端适配
+  // ==========================================================
+
+  function isMobile() {
+    return window.innerWidth < 768 ||
+           /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  }
+
+  function applyMobileAdaptations() {
+    if (!isMobile()) {
+      updateShortcutRef('desktop');
+      return;
+    }
+
+    // 替换快捷键标注为移动端操作提示
+    var shortcuts = document.querySelectorAll('.gate-btn .shortcut');
+    for (var i = 0; i < shortcuts.length; i++) {
+      var parent = shortcuts[i].parentElement;
+      var gate = parent ? parent.getAttribute('data-gate') : '';
+      if (gate === 'ERASER') {
+        shortcuts[i].textContent = '长按';
+      } else {
+        shortcuts[i].textContent = '点击';
+      }
+    }
+
+    // 底部运行按钮更醒目
+    var runBtn = document.getElementById('btn-run');
+    if (runBtn) {
+      runBtn.style.padding = '12px 32px';
+      runBtn.style.fontSize = '16px';
+    }
+
+    // 添加双击运行提示
+    var circuitTitle = document.querySelector('#circuit-area .circuit-title');
+    if (circuitTitle) {
+      circuitTitle.textContent = '量子电路（点击放置门，双击空白处运行）';
+    }
+
+    // 为电路区域添加双击运行
+    var circuitArea = document.getElementById('circuit-area');
+    if (circuitArea) {
+      circuitArea.addEventListener('dblclick', function (e) {
+        if (!e.target.closest('.circuit-cell')) {
+          if (typeof LevelManager !== 'undefined' &&
+              typeof CircuitRunner !== 'undefined' &&
+              !CircuitRunner.isAnimating()) {
+            LevelManager.runCircuitWithCheck();
+          }
+        }
+      });
+    }
+
+    // 增大门按钮触摸区域
+    var gateBtns = document.querySelectorAll('.gate-btn');
+    for (var j = 0; j < gateBtns.length; j++) {
+      gateBtns[j].style.minWidth = '44px';
+      gateBtns[j].style.minHeight = '44px';
+    }
+
+    updateShortcutRef('mobile');
+  }
+
+  /** 更新快捷键参考文字 */
+  function updateShortcutRef(mode) {
+    var el = document.getElementById('shortcuts-content');
+    if (!el) return;
+    if (mode === 'mobile') {
+      el.innerHTML = '<strong>移动端操作：</strong><br>点击门→点击网格放置 | 双击空白运行 | 长按擦除';
+    } else {
+      el.innerHTML = '<strong>1-6</strong> 选门 &nbsp;|&nbsp; <strong>Enter</strong> 运行 &nbsp;|&nbsp; <strong>C</strong> 清空<br><strong>Esc</strong> 取消选中 &nbsp;|&nbsp; <strong>右键</strong> 删除门<br><strong>Ctrl+Shift+R</strong> 完全重置';
+    }
+  }
+
+  // ==========================================================
+  //  5. 模态窗口通用关闭
+  // ==========================================================
+
+  function bindModalCloseEvents() {
+    // 关闭按钮
+    document.addEventListener('click', function (e) {
+      if (e.target.classList.contains('modal-close')) {
+        var modalId = e.target.getAttribute('data-close');
+        var modal = document.getElementById(modalId);
+        if (modal) modal.classList.remove('active');
+      }
+    });
+
+    // 点击遮罩层关闭
+    document.addEventListener('click', function (e) {
+      if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('active');
+      }
+    });
+
+    // ESC 关闭
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        var openModals = document.querySelectorAll('.modal-overlay.active');
+        if (openModals.length > 0) {
+          // 如果 CircuitGrid 有选中的门，ESC 先取消选中
+          // 如果没有选中但有弹窗打开，关闭弹窗
+          var hasSelection = typeof CircuitGrid !== 'undefined' &&
+                             CircuitGrid.getSelectedGate() !== null;
+          if (!hasSelection) {
+            for (var i = 0; i < openModals.length; i++) {
+              openModals[i].classList.remove('active');
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // ==========================================================
+  //  6. 顶部按钮绑定
+  // ==========================================================
+
+  function bindTopbarButtons() {
+    var helpBtn    = document.getElementById('btn-help');
+    var basicsBtn  = document.getElementById('btn-basics');
+    var galleryBtn = document.getElementById('btn-gallery');
+    var levelsBtn  = document.getElementById('btn-levels');
+    var hintBtn    = document.getElementById('btn-hint');
+    var resetBtn   = document.getElementById('btn-reset');
+
+    if (helpBtn)    helpBtn.addEventListener('click', openTutorial);
+    if (basicsBtn)  basicsBtn.addEventListener('click', openBasics);
+    if (galleryBtn) galleryBtn.addEventListener('click', openGates);
+    if (levelsBtn)  levelsBtn.addEventListener('click', openLevelSelect);
+    if (hintBtn)    hintBtn.addEventListener('click', openHint);
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        if (typeof CircuitRunner !== 'undefined') {
+          CircuitRunner.fullReset();
+        }
+        currentTutorialPage = 0;
+      });
+    }
+
+    // "重置进度"按钮 → 弹出确认弹窗
+    var resetProgressBtn = document.getElementById('btn-reset-progress');
+    if (resetProgressBtn) {
+      resetProgressBtn.addEventListener('click', function () {
+        var modal = document.getElementById('modal-reset-confirm');
+        if (modal) modal.classList.add('active');
+      });
+    }
+
+    // 确认重置
+    var confirmBtn = document.getElementById('btn-confirm-reset');
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', function () {
+        if (typeof LevelManager !== 'undefined') {
+          LevelManager.resetAllProgress();
+        }
+        // 关闭弹窗并刷新页面
+        var modal = document.getElementById('modal-reset-confirm');
+        if (modal) modal.classList.remove('active');
+        setTimeout(function () { location.reload(); }, 300);
+      });
+    }
+
+    // 取消重置
+    var cancelBtn = document.getElementById('btn-cancel-reset');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function () {
+        var modal = document.getElementById('modal-reset-confirm');
+        if (modal) modal.classList.remove('active');
+      });
+    }
+  }
+
+  // ==========================================================
+  //  关卡选择弹窗
+  // ==========================================================
+  function buildLevelSelectHTML() {
+    var body = document.getElementById('level-select-body');
+    if (!body) return;
+
+    var completed = (typeof LevelManager !== 'undefined')
+      ? LevelManager.getCompletedLevels() : [];
+    var current = (typeof LevelManager !== 'undefined')
+      ? LevelManager.getCurrentLevel().id : 1;
+    var stored = (typeof LevelManager !== 'undefined')
+      ? LevelManager.getStoredLevel() : 1;
+
+    var html = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">';
+    for (var i = 1; i <= 8; i++) {
+      var isCompleted = (completed.indexOf(i) !== -1);
+      var isUnlocked = (i <= stored);
+      var isCurrent = (i === current);
+      var bg = isCompleted ? 'rgba(46,204,113,0.15)' : (isUnlocked ? '#1a1a2e' : '#111122');
+      var border = isCurrent ? '#00bcd4' : (isCompleted ? '#2ecc71' : (isUnlocked ? '#2a2a4a' : '#1a1a24'));
+      var cursor = isUnlocked ? 'pointer' : 'default';
+      var opacity = isUnlocked ? '1' : '0.4';
+
+      html += '<div class="level-select-card" data-level="' + i + '" style="';
+      html += 'background:' + bg + ';border:2px solid ' + border + ';border-radius:10px;';
+      html += 'padding:12px 8px;text-align:center;cursor:' + cursor + ';opacity:' + opacity + ';';
+      html += 'transition:all 0.2s;';
+      html += '">';
+      html += '<div style="font-size:22px;font-weight:700;">' + i + '</div>';
+      html += '<div style="font-size:11px;color:#aaa;margin-top:2px;">' + getLevelName(i) + '</div>';
+      if (isCompleted) html += '<div style="font-size:14px;margin-top:2px;">✅</div>';
+      else if (!isUnlocked) html += '<div style="font-size:14px;margin-top:2px;">🔒</div>';
+      else if (isCurrent) html += '<div style="font-size:14px;margin-top:2px;">📍</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+    body.innerHTML = html;
+  }
+
+  function getLevelName(id) {
+    var names = ['','叠加态','量子翻转','纠缠的魔力','双重叠加','隐藏的X门','XZ组合','Y门的魔法','相位的艺术'];
+    return names[id] || '';
+  }
+
+  function openLevelSelect() {
+    buildLevelSelectHTML();
+    var modal = document.getElementById('modal-level-select');
+    if (modal) modal.classList.add('active');
+  }
+
+  // 委托：关卡卡片点击
+  document.addEventListener('click', function(e) {
+    var card = e.target.closest('.level-select-card');
+    if (!card) return;
+    var levelId = parseInt(card.getAttribute('data-level'), 10);
+    if (!levelId) return;
+    var stored = (typeof LevelManager !== 'undefined') ? LevelManager.getStoredLevel() : 1;
+    if (levelId > stored) return; // 未解锁
+    // 加载关卡并关闭弹窗
+    if (typeof LevelManager !== 'undefined') {
+      LevelManager.loadLevel(levelId);
+    }
+    var modal = document.getElementById('modal-level-select');
+    if (modal) modal.classList.remove('active');
+  });
+
+  // ==========================================================
+  //  通关庆祝：覆盖 LevelManager.onLevelPassed
+  // ==========================================================
+  function setupCompletionHook() {
+    if (typeof LevelManager === 'undefined') return;
+    var _origOnLevelPassed = LevelManager._onLevelPassed;
+    // 在 LevelManager 内部 hook（通过 monkey-patch evaluateResult）
+    var _origEvaluate = LevelManager.evaluateResult;
+    LevelManager.evaluateResult = function(probs, state) {
+      _origEvaluate(probs, state);
+      // 检查是否最后一关通过
+      var level = LevelManager.getCurrentLevel();
+      var result = LevelManager.checkGoal(probs, state, level);
+      if (result.passed && level.id >= 8) {
+        setTimeout(function() {
+          var modal = document.getElementById('modal-completion');
+          if (modal) modal.classList.add('active');
+        }, 800);
+      }
+    };
+
+    // 完成弹窗按钮
+    var restartBtn = document.getElementById('btn-restart-level1');
+    var replayBtn = document.getElementById('btn-replay-any');
+    if (restartBtn) {
+      restartBtn.addEventListener('click', function() {
+        document.getElementById('modal-completion').classList.remove('active');
+        LevelManager.loadLevel(1);
+      });
+    }
+    if (replayBtn) {
+      replayBtn.addEventListener('click', function() {
+        document.getElementById('modal-completion').classList.remove('active');
+        openLevelSelect();
+      });
+    }
+  }
+
+  /**
+   * 主导初始化流程（在 DOMContentLoaded 后调用）
+   *
+   * 顺序：
+   *  1. CircuitGrid.init()          — 网格交互就绪
+   *  2. CircuitRunner.init()        — 运行/动画/面板绑定
+   *  3. 打通运行→判定链路           — 补丁 runCircuit + runCircuitWithCheck
+   *  4. LevelManager.init()         — 关卡加载 / 门锁定 / 按钮覆盖
+   *  5. 本模块 UI 初始化            — 引导/图鉴/提示/移动端
+   *  6. 检查首次引导弹窗
+   */
+  function initAll() {
+    // --- 步骤 1: 网格交互 ---
+    if (typeof CircuitGrid !== 'undefined') {
+      CircuitGrid.init();
+    }
+
+    // --- 步骤 2: 运行器（绑定 #btn-run、Enter 等） ---
+    if (typeof CircuitRunner !== 'undefined') {
+      CircuitRunner.init();
+    }
+
+    // --- 步骤 3: 打通运行→判定链路 ---
+    // 思路：修补 CircuitRunner.runCircuit，使其在动画结束后自动执行关卡判定。
+    // 同时修补 LevelManager.runCircuitWithCheck 避免重复判定。
+    if (typeof CircuitRunner !== 'undefined') {
+      var _origRunCircuit = CircuitRunner.runCircuit;
+
+      CircuitRunner.runCircuit = async function () {
+        await _origRunCircuit();
+
+        // 动画结束后判定目标
+        if (typeof LevelManager !== 'undefined' && typeof QuantumSimulator !== 'undefined') {
+          var state = CircuitRunner.getLastRunState();
+          if (state) {
+            var probs = QuantumSimulator.getProbabilities(state);
+            LevelManager.evaluateResult(probs, state);
+          }
+        }
+      };
+    }
+
+    if (typeof LevelManager !== 'undefined') {
+      // 修补 runCircuitWithCheck：因为 runCircuit 已包含判定，所以只需调用它
+      LevelManager.runCircuitWithCheck = async function () {
+        LevelManager.removeResultNotification();
+        if (typeof CircuitRunner !== 'undefined') {
+          await CircuitRunner.runCircuit(); // 内部已含判定
+        }
+      };
+    }
+
+    // --- 步骤 4: 关卡系统 ---
+    if (typeof LevelManager !== 'undefined') {
+      // 注意：LevelManager.init() 中 overrideRunButton() 会克隆替换 #btn-run
+      // 替换后的按钮调用 runCircuitWithCheck → runCircuit（已含判定）→ 正确
+      LevelManager.init();
+    }
+
+    // --- 步骤 5: 本模块 UI ---
+    injectStyles();
+    buildTutorialHTML();
+    buildBasicsModalHTML();
+    buildGatesModalHTML();
+    bindTutorialEvents();
+    bindGlossaryTabEvents();
+    bindHintEvents();
+    bindModalCloseEvents();
+    bindTopbarButtons();
+    setupCompletionHook(); // 通关庆祝 + 选关逻辑
+
+    // 移动端适配
+    applyMobileAdaptations();
+
+    // --- 步骤 6: 首次引导 ---
+    if (typeof LevelManager !== 'undefined' && !LevelManager.isTutorialRead()) {
+      // 延迟弹出，让页面先渲染
+      setTimeout(function () {
+        openTutorial();
+        LevelManager.setTutorialRead(true);
+      }, 500);
+    }
+
+    // 打印启动信息
+    console.log(
+      '%c⚛️ Turing Quamplete %c已就绪',
+      'color:#00bcd4;font-size:16px;font-weight:bold;',
+      'color:#aaa;'
+    );
+    if (typeof LevelManager !== 'undefined') {
+      var lvl = LevelManager.getCurrentLevel();
+      console.log(
+        '%c当前关卡：%c第' + lvl.id + '关 · ' + lvl.name,
+        'color:#888;', 'color:#f1c40f;'
+      );
+    }
+    console.log(
+      '%c提示：%c按 Enter 运行电路 | C 清除电路 | 1-5 选择门 | ESC 取消',
+      'color:#888;', 'color:#aaa;'
+    );
+  }
+
+  // ==========================================================
+  //  公开 API（挂载到全局）
+  // ==========================================================
+
+  window.GameApp = {
+    init: initAll,
+    openTutorial: openTutorial,
+    openBasics: openBasics,
+    openGates: openGates,
+    openHint: openHint,
+    isMobile: isMobile,
+    applyMobileAdaptations: applyMobileAdaptations,
+
+    // 暴露内部供调试
+    _tutorialPages: tutorialPages,
+    _basicsPages: basicsPages,
+    _gatePages: gatePages,
+    _solutionDiagrams: solutionDiagrams
+  };
+
+})();
+
+// ============================================================
+//  自动启动（当 DOM 就绪时）
+// ============================================================
+document.addEventListener('DOMContentLoaded', function () {
+  if (typeof GameApp !== 'undefined') {
+    GameApp.init();
+  }
+});
+
+// ============================================================
+// 第6部分结束（最终部分）
+//
+// 文件清单与合并说明：
+// ┌──────────────────────────────────────────────────────────┐
+// │ index.html            第1部分   HTML结构 + CSS样式       │
+// │ quantum-simulator.js  第2部分   量子模拟引擎              │
+// │ circuit-grid.js       第3部分   电路网格交互              │
+// │ circuit-runner.js     第4部分   运行电路与动画            │
+// │ level-manager.js      第5部分   关卡系统与进度存储        │
+// │ app.js                第6部分   引导/图鉴/提示/集成       │
+// ├──────────────────────────────────────────────────────────┤
+// │ 在 index.html 中按顺序引入以上 JS 文件即可运行游戏：     │
+// │                                                          │
+// │ <script src="quantum-simulator.js"></script>             │
+// │ <script src="circuit-grid.js"></script>                  │
+// │ <script src="circuit-runner.js"></script>                │
+// │ <script src="level-manager.js"></script>                 │
+// │ <script src="app.js"></script>                           │
+// │                                                          │
+// │ 所有模块通过全局变量（window.*）通信：                   │
+// │   QuantumSimulator  — 量子计算引擎                       │
+// │   CircuitGrid       — 网格交互                           │
+// │   CircuitRunner     — 运行与动画                         │
+// │   LevelManager      — 关卡与进度                         │
+// │   GameApp           — UI层与集成                         │
+// └──────────────────────────────────────────────────────────┘
+// ============================================================
+
+  </script>
+
+
+  <!--
+  ============================================================
+  Turing Quamplete — 双量子比特电路游戏
+  单文件合并版本
+
+  代码结构：
+    第1部分 (HTML+CSS)     — 游戏界面布局与深色科技风样式
+    第2部分 (quantum)       — 量子模拟引擎：复数运算、门矩阵、态演化、测量
+    第3部分 (circuit-grid)  — 电路网格交互：门放置/删除、互斥检查、快捷键
+    第4部分 (circuit-runner) — 运行电路与动画：逐列演化、面板更新、实时态矢量
+    第5部分 (level-manager) — 关卡系统：8关配置、目标判定、进度存储、门解锁
+    第6部分 (app)           — UI层：引导弹窗、量子基础/门图鉴、提示、选关、移动端
+
+  所有模块通过全局对象通信：
+    QuantumSimulator  CircuitGrid  CircuitRunner  LevelManager  GameApp
+
+  无外部依赖，可直接在浏览器中打开运行。
+  ============================================================
+  -->
+</body>
+</html>
