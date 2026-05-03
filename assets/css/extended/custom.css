@@ -48,7 +48,10 @@ code, pre {
     }
 
     /* 3. 允许行内公式在必要时换行 */
-
+    .katex {
+        white-space: normal !important;
+        word-break: break-all;
+    }
     /* 4. 最关键：限制所有父容器不允许溢出 */
     .post-content,
     .post-content p,
