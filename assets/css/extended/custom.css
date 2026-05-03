@@ -1,3 +1,21 @@
+/* 全局字体设置 */
+body {
+    font-family:
+        "PingFang SC",        /* macOS / iOS */
+        "Microsoft YaHei",    /* Windows */
+        "Noto Sans SC",       /* Android / Linux */
+        sans-serif;           /* 兜底字体 */
+}
+
+/* 代码块保持等宽字体（可选） */
+code, pre {
+    font-family:
+        "Fira Code",
+        "Cascadia Code",
+        "Consolas",
+        monospace;
+}
+
 /* 针对手机屏幕调整基础字号 */
 @media (max-width: 720px) {
     html {
