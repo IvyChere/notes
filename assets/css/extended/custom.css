@@ -9,9 +9,33 @@
     }
 }
 
-/* 让块级公式容器可滚动 */
-.katex-display {
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 4px; /* 留一点空间给滚动条 */
+/* ========== 移动端公式防溢出 ========== */
+@media (max-width: 768px) {
+
+    /* 1. 确保所有公式容器都能滚动 */
+    .katex-display,
+    .katex,
+    .MathJax_Display,
+    .MathJax {
+        overflow-x: auto;
+        overflow-y: hidden;
+        max-width: 100%;
+        -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
+    }
+
+    /* 2. 块级公式容器加一点内边距，防止滚动条遮挡 */
+    .katex-display,
+    .MathJax_Display {
+        padding-bottom: 4px;
+    }
+
+    /* 3. 允许行内公式在必要时换行 */
+
+    /* 4. 最关键：限制所有父容器不允许溢出 */
+    .post-content,
+    .post-content p,
+    .post-content div {
+        overflow-x: clip;     /* clip 比 hidden 更安全，不生成滚动条 */
+        max-width: 100%;
+    }
 }
