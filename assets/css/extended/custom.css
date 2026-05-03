@@ -18,18 +18,25 @@ code, pre {
         monospace;
 }
 
-/* ========== 移动端公式防溢出（温和修复版） ========== */
+/* ========== 移动端公式防溢出（最终修复版） ========== */
 @media (max-width: 768px) {
-
-    /* 1. 行内公式容器：允许它内部的文本断行，但不去控制内部的子元素 */
-    mjx-container:not([display="true"]) {
-        white-space: normal !important;    /* 允许换行 */
-        word-break: break-word;           /* 必要时断词 */
-        overflow-wrap: break-word;
-        display: inline !important;       /* 确保它作为行内元素随文字流动 */
+    /* --- 1. 基础字号与标题 --- */
+    html {
+        font-size: 14px;
+    }
+    .post-title {
+        font-size: 1.6rem;
     }
 
-    /* 2. 块级公式容器：保持不换行，使用横向滚动条 */
+    /* --- 2. 行内公式容器：温和地允许换行 --- */
+    mjx-container:not([display="true"]) {
+        white-space: normal !important;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        display: inline !important;
+    }
+
+    /* --- 3. 块级公式容器：不允许换行，但可以横向滚动 --- */
     mjx-container[display="true"],
     .MathJax_Display {
         white-space: nowrap !important;
@@ -41,7 +48,7 @@ code, pre {
         padding-bottom: 4px;
     }
 
-    /* 3. 保护父容器不产生横向溢出 */
+    /* --- 4. 防止父容器横向溢出 --- */
     .post-content,
     .post-content p,
     .post-content div {
