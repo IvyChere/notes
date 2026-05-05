@@ -249,8 +249,16 @@ $$
 
 
 
+### 2. $Poisson$括号
 
+在[上一篇文章](https://blogs.starspress.org/posts/analmech_003/#234-%E5%8A%9B%E5%AD%A6%E9%87%8F%E9%9A%8F%E6%97%B6%E9%97%B4%E7%9A%84%E6%BC%94%E5%8C%96)，我们就已经引入了$Poisson$括号. 在这里，我想对它进行进一步的介绍. 
 
+#### 2.1 定义
 
+两个力学量$A, B$的$Poisson$括号，一般记作$\{ A, B\}$或者$[A, B]_{PB}$，又称经典正则对易子，遵循如下定义：
+
+$$
+\{ A, B\} = \frac{\partial A}{\partial q^\alpha}\frac{\partial B}{\partial p_\alpha} - \frac{\partial B}{\partial q^\alpha}\frac{\partial A}{\partial p_\alpha}
+$$
 
 [^1]: 逆序数就是你学习线性代数它教材第一章上来就甩到你脸上的东西
