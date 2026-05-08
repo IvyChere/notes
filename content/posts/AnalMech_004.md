@@ -334,7 +334,7 @@ $$
 &= (\delta_{il}\delta_{jm} - \delta_{im}\delta_{jl})x_l p_m \\
 &= x_i p_j - x_j p_i \\
 \\
-\text{故} \\
+&\text{故} \\
 &\{L_i, L_j\} = \epsilon_{ijk}L_k \\
 &&\text{Q.E.D}
 \end{aligned}
