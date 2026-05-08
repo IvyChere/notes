@@ -282,35 +282,25 @@ $$
 \begin{aligned}
 &\ \{ A, B\} = -\{B, A\} \\
 \\
-&\left.
-\begin{aligned}
+&\left.\begin{array}{l}
 \{A+B, C\} = \{A, C\} + \{B, C\} \\
 \{A, B+C\} = \{A, B\} + \{A, C\} \\
 \lambda\{A, B\} = \{\lambda A, B\} = \{A, \lambda B\}
-\end{aligned}
-\right\} \text{线性性} \\
+\end{array}\right\} \text{线性性} \\
 \\
-&\left.
-\begin{aligned}
+&\left.\begin{array}{l}
 \{AB, C\} = A\{B, C\} + \{A, C\}B \\
-\{A, BC\} = \{A, B\}C + B\{A, C\} \\
-\end{aligned}
-\right\} \\
+\{A, BC\} = \{A, B\}C + B\{A, C\}
+\end{array}\right\} \text{莱布尼茨律} \\
 \\
-&\left.
-\begin{aligned}
-\{A, f(B)\} = \{A, B\}\frac{\partial f}{\partial B} \\
-\{f(A), B\} = \frac{\partial f}{\partial A}\{A, B\} \\
-\end{aligned}
-\right\} \\
+&\left.\begin{array}{l}
+\{A, f(B)\} = \{A, B\}\dfrac{\partial f}{\partial B} \\
+\{f(A), B\} = \dfrac{\partial f}{\partial A}\{A, B\}
+\end{array}\right\} \\
 \\
-
 &\ \{ A, B^n\} =n\{A, B\}B^{n-1} \\
-&\ \{ A^n, B\} =nA^{n-1}\{A, B\} \\
-\\
-
-\end{aligned} 
-
+&\ \{ A^n, B\} =nA^{n-1}\{A, B\}
+\end{aligned}
 
 $$
 
@@ -354,5 +344,3 @@ $$
 
 
 [^1]: 逆序数就是你学习线性代数它教材第一章上来就甩到你脸上的东西
-
-
