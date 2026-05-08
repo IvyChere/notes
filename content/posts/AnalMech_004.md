@@ -291,7 +291,7 @@ $$
 &\left.\begin{array}{l}
 \{AB, C\} = A\{B, C\} + \{A, C\}B \\
 \{A, BC\} = \{A, B\}C + B\{A, C\}
-\end{array}\right\} \text{莱布尼茨律} \\
+\end{array}\right\} \text{Lebniz律} \\
 \\
 &\left.\begin{array}{l}
 \{A, f(B)\} = \{A, B\}\dfrac{\partial f}{\partial B} \\
@@ -301,7 +301,6 @@ $$
 &\ \{ A, B^n\} =n\{A, B\}B^{n-1} \\
 &\ \{ A^n, B\} =nA^{n-1}\{A, B\}
 \end{aligned}
-
 $$
 
 计算时注意$A, B, C$乘积的相对位置关系。
