@@ -261,4 +261,98 @@ $$
 \{ A, B\} = \frac{\partial A}{\partial q^\alpha}\frac{\partial B}{\partial p_\alpha} - \frac{\partial B}{\partial q^\alpha}\frac{\partial A}{\partial p_\alpha}
 $$
 
+#### 2.2 性质
+
+##### 2.2.1 基本对易关系：
+
+由定义可知，有
+
+$$
+\begin{aligned}
+&\{ q^\mu,p_\nu\} = \delta_{\mu\nu} \\
+&\{ q^\mu, q^\nu\} = \{ p_\mu, p_\nu\} = 0
+\end{aligned}
+$$
+
+称为**基本对易关系**
+
+##### 2.2.2 运算性质
+
+$$
+\begin{aligned}
+&\ \{ A, B\} = -\{B, A\} \\
+\\
+&\left.
+\begin{aligned}
+\{A+B, C\} = \{A, C\} + \{B, C\} \\
+\{A, B+C\} = \{A, B\} + \{A, C\} \\
+\lambda\{A, B\} = \{\lambda A, B\} = \{A, \lambda B\}
+\end{aligned}
+\right\} \text{线性性} \\
+\\
+&\left.
+\begin{aligned}
+\{AB, C\} = A\{B, C\} + \{A, C\}B \\
+\{A, BC\} = \{A, B\}C + B\{A, C\} \\
+\end{aligned}
+\right\} \\
+\\
+&\left.
+\begin{aligned}
+\{A, f(B)\} = \{A, B\}\frac{\partial f}{\partial B} \\
+\{f(A), B\} = \frac{\partial f}{\partial A}\{A, B\} \\
+\end{aligned}
+\right\} \\
+\\
+
+&\ \{ A, B^n\} =n\{A, B\}B^{n-1} \\
+&\ \{ A^n, B\} =nA^{n-1}\{A, B\} \\
+\\
+
+\end{aligned} 
+
+
+$$
+
+计算时注意$A, B, C$乘积的相对位置关系。
+
+#### 2.3 应用
+
+##### 2.3.1 角动量分量间的关系
+
+已知：$L_i = \epsilon_{ijk}x_j p_k$，求证$\{L_i, L_j\} = \epsilon_{ijk}L_k$：
+
+$$
+\begin{aligned}
+\text{Proof: } & &&\\
+&\{L_i, L_j\} = \{\epsilon_{iab} x_a p_b, \epsilon_{jcd} x_c p_d \} = \epsilon_{iab}\epsilon_{jcd} \{x_a p_b, x_cp_d\} \\
+\\
+&\text{其中} \\
+&\{x_a p_b, x_c p_d\} = x_a\{p_b, x_c p_d\} + \{ x_a, x_c p_d\}p_b \\
+&= \dots \\
+&= x_c\{x_a, p_d\}p_b - x_a\{x_c, p_b\}p_d \\
+&= \delta_{ad}x_c p_b - \delta_{bc}x_a p_d \\
+\\
+&\text{即} \\
+& \{ L_i, L_j\} = \epsilon_{iab}\epsilon_{jcd}\delta_{ad}x_c p_b - \epsilon_{iab}\epsilon_{jcd}\delta_{bc}x_a p_d \\
+&= \epsilon_{iab}\epsilon_{jca}x_c p_b - \epsilon_{iac}\epsilon_{jcd}x_a p_d \\
+&= (\delta_{bj}\delta_{ic} - \delta_{bc}\delta_{ij})x_c p_b - (\delta_{id}\delta_{aj} - \delta_{ij}\delta_{ad})x_a p_d \\
+&= (x_i p_j - \delta_{ij}x_b p_b) - (x_j p_i - \delta_{ij}x_a p_a) \\
+&= x_i p_j - x_j p_i \\
+\\
+&\text{另一方面} \\
+&\epsilon_{ijk}L_k = \epsilon_{ijk}\epsilon_{klm}x_l p_m \\
+&= (\delta_{il}\delta_{jm} - \delta_{im}\delta_{jl})x_l p_m \\
+&= x_i p_j - x_j p_i \\
+\\
+\text{故} \\
+&\{L_i, L_j\} = \epsilon_{ijk}L_k \\
+&&\text{Q.E.D}
+\end{aligned}
+$$
+
+
+
 [^1]: 逆序数就是你学习线性代数它教材第一章上来就甩到你脸上的东西
+
+
