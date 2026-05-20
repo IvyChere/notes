@@ -1,7 +1,7 @@
 # 你的网站根域名
 baseURL = "https://blogs.starspress.org/"
 # 网站语言
-languageCode = "zh-cn"
+locale = "zh-CN"
 # 网站标题
 title = "Ivy_C's Notes"
 # 使用的主题
