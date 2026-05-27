@@ -142,16 +142,18 @@ $$
 
 * $n \rightarrow +\infty$时，电子脱离原子核，称为“电离态”.
 
-当电子由定态$E_m$跃迁至$E_n$（$n < m$）时：
+当电子由高能定态$E_n$跃迁至低能定态$E_m$（$n > m$）时，辐射电磁波：
 
 $$
-h\nu = E_m - E_n = \frac{Zm_e e^4}{32\pi^2\epsilon_0^2\hbar^2} \left( \frac{1}{n^2} - \frac{1}{m^2} \right)
+h\nu = E_m - E_n = \frac{Zm_e e^4}{32\pi^2\epsilon_0^2\hbar^2} \left( \frac{1}{m^2} - \frac{1}{n^2} \right)
 $$
 
 由于$c = \lambda\nu$，即
 
 $$
-\frac{1}{\lambda} = \frac{m_e e^4 Z^2}{8 \varepsilon_0^2 h^3 c} \left( \frac{1}{n^2} - \frac{1}{m^2} \right), n < m \in \mathbb N^+
+\frac{1}{\lambda} = \frac{m_e e^4 Z^2}{8 \varepsilon_0^2 h^3 c} \left( \frac{1}{m^2} - \frac{1}{n^2} \right), m < n \in \mathbb N^+
 $$
 
 其中$\mathrm R = \dfrac{m_e e^4 Z^2}{8 \varepsilon_0^2 h^3 c}$. 这个数据与实验结果吻合地很好.
+
+
