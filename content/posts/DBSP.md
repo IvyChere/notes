@@ -1,14 +1,16 @@
 +++
 date = '2026-06-17T00:23:48+08:00'
 draft = false
+title = '数据系统原理复习'
 math = true
-title = '数据库基本原理期末复习'
+author = 'Ivy_C'
+description = '数据系统原理复习'
+summary = '数据系统原理复习'
+
 [build]
   list = "never"
   render = "always"
 +++
-
-# 《数据库系统原理》期末复习资料
 
 ## 目录
 
