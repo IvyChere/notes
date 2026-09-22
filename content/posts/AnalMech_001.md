@@ -81,7 +81,7 @@ $$
 容易发现，在极坐标系下，单摆的位置可以由半径与摆角$(\rho, \theta)$这一对坐标描述，而由于几何约束，$\rho \equiv l$. 因此，我们只需要考虑$\theta$方向的运动即可. 此时，由极坐标下的牛顿第二定律：$\mathrm{F}_{\theta} = \mathrm{m(\rho \ddot{\theta} + 2 \dot{\rho}\dot{\theta})}$可以得出：
 
 $$
-\mathrm{mg \sin \theta} = - \mathrm{m}l\ddot{\theta} \Rightarrow \ddot{\theta} + \frac{\mathrm{g}}{l} \sin \theta
+\mathrm{mg \sin \theta} = - \mathrm{m}l\ddot{\theta} \Rightarrow \ddot{\theta} + \frac{\mathrm{g}}{l} \sin \theta = 0
 $$
 
 简单又简洁. 
@@ -178,7 +178,7 @@ $$
 
 这个时候，等式右边为0，质点的运动不就是平衡的了吗？我们管$\mathbf{f} = - m \mathbf{\ddot{r}}$叫做惯性力. 也就是说，对于一般的运动，质点所受的自由合外力$\mathbf F$，约束力$\mathbf R$与惯性力$-m\mathbf{\ddot r}$三力平衡.
 
-......我说6，还能这么玩.
+......6，还能这样.
 
 但是既然我们可以使用惯性力将一般的运动化为平衡的运动，那么我们是不是就可以利用虚功原理了呢？
 
